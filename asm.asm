@@ -1,7 +1,9 @@
 section .data
-  trajectory db `ABCD\n\0XXX`
-  c times 20 db 0 
-
+  trajectory: db `ABCD\n\0XXX`
+  c: times 20 db 0 
+  out: times 200 db 0
+  err_args: db `Vstupni chyba\n\0`
+  err_args_end:
 
 
 section .text
@@ -27,6 +29,44 @@ swap:
 
 global _start
 _start:
+  ; argc == 2
+  cmp [rsp], dword 2
+  je .args_ok
+
+  ; write(2, err_args, len(err_args)
+  mov rax, 1                    ; SYS_WRITE
+  mov rdi, 2                    ; stderr
+  mov rsi, err_args
+  mov rdx, err_args_end - err_args
+  syscall
+
+  ; exit(1)
+  mov rax, 60                   ; SYS_EXIT
+  mov rdi, 1
+  syscall
+
+  .args_ok:
+  
+  ; parse argument
+  mov rdi, [rsp + 16]           ; argv[1]
+  mov rsi, 10                   ; base
+  mov rax, 0                    ; converted number
+
+  .loop:
+    cmp byte [rdi], 0           ; is \0
+    je .endloop
+
+    mul rsi                     ; multiply by base 10
+    add al, [rdi]               ; += ascii number
+    sub al, '0'                 ; substract '0' from ascii number
+    
+    inc rdi                     ; move to the next character 
+    jmp .loop
+  .endloop:
+
+  mov r9, rax                   ; r9 = number of cities
+
+
   call print
   push r12
 
