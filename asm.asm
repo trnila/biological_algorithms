@@ -1,5 +1,5 @@
 section .data
-  trajectory: db `ABCD\n\0XXX`
+  trajectory: db `ABCDEFGHIJKLMNOPQRSTUVWXYZ`
   c: times 20 db 0 
   out: times 200 db 0
   err_args: db `Vstupni chyba\n\0`
@@ -12,7 +12,8 @@ print:
   mov rax, 1
   mov rdi, 1
   mov rsi, trajectory
-  mov rdx, 5
+  mov rdx, r9
+  inc rdx
   syscall
   ret
 
@@ -66,6 +67,8 @@ _start:
 
   mov r9, rax                   ; r9 = number of cities
 
+  mov [trajectory + r9], byte `\n`
+
 
   call print
   push r12
@@ -74,7 +77,7 @@ _start:
   mov r12, 0 ; i
 
 .start:
-  cmp r12, 4
+  cmp r12, r9
   jge .end
 
   ; c[i] < i
