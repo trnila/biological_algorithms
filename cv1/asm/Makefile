@@ -1,14 +1,14 @@
 CXXFLAGS=-g
 
+all: asm cpp
 
-main: asm.o
-	ld $^
+asm: asm.o
+	ld $^ -o $@
 
 
 %.o: %.asm
 	nasm -g -f elf64 -F dwarf $^
 
 
-
 clean:
-	rm -f *.o main
+	rm -f *.o asm cpp 

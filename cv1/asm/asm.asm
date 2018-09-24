@@ -5,7 +5,7 @@ section .data
   c: times 20 db 0 
   out: times BUFF_SIZE db 0
   out_pos: dq 0
-  err_args: db `Vstupni chyba\n\0`
+  err_args: db `./asm num_of_cities\n\0`
   err_args_end:
 
 
