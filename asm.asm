@@ -1,7 +1,10 @@
+%define BUFF_SIZE 128000
+
 section .data
   trajectory: db `ABCDEFGHIJKLMNOPQRSTUVWXYZ`
   c: times 20 db 0 
-  out: times 2000 db 0
+  out: times BUFF_SIZE db 0
+  out_pos: dq 0
   err_args: db `Vstupni chyba\n\0`
   err_args_end:
 
@@ -9,12 +12,31 @@ section .data
 section .text
 
 print:
+  mov ax, ds               ; setup segments
+  mov es, ax               ; setup segments
+
+  mov rdi, out             ; destination
+  add rdi, [out_pos]
+  mov rsi, trajectory      ; source
+
+  mov rcx, r9              ; number of cities to copy
+  inc rcx                  ; add newline
+  add [out_pos], rcx        ; update size of out buffer
+  rep movsb
+
+  cmp [out_pos], dword BUFF_SIZE - 1000
+  jge flush
+  ret
+
+flush:
   mov rax, 1
   mov rdi, 1
-  mov rsi, trajectory
-  mov rdx, r9
-  inc rdx
+  mov rsi, out
+  mov rdx, [out_pos]
   syscall
+
+  mov [out_pos], dword 0
+
   ret
 
 swap:
@@ -89,6 +111,7 @@ _start:
   call swap
   jmp .cont
   .odd:
+  mov rdi, 0
   mov dil, byte [c + r12]
   call swap
   .cont:
@@ -107,6 +130,9 @@ _start:
   .end:
   pop r12
 
+  call flush
+
   mov rax, 60
+  mov rdi, 0 
   syscall
 
