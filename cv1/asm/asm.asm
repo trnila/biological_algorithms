@@ -21,22 +21,22 @@ print:
 
   mov rcx, r9              ; number of cities to copy
   inc rcx                  ; add newline
-  add [out_pos], rcx        ; update size of out buffer
-  rep movsb
+  add [out_pos], rcx       ; update size of out buffer
+  rep movsb                ; copy current trajectory to the buffer
 
-  cmp [out_pos], dword BUFF_SIZE - 1000
+  cmp [out_pos], dword BUFF_SIZE - 1000  ; is buffer bigger than threshold?
   jge flush
   ret
 
 flush:
-  mov rax, 1
-  mov rdi, 1
+  ; write(1, out, *out_pos)
+  mov rax, 1               ; SYS_WRITE
+  mov rdi, 1               ; stdout
   mov rsi, out
   mov rdx, [out_pos]
   syscall
 
-  mov [out_pos], dword 0
-
+  mov [out_pos], dword 0   ; reset out buffer size
   ret
 
 swap:
@@ -62,18 +62,17 @@ _start:
 
   ; exit(1)
   mov rax, 60                   ; SYS_EXIT
-  mov rdi, 1
+  mov rdi, 1                    ; exit status 1
   syscall
 
   .args_ok:
-  
   ; parse argument
   mov rdi, [rsp + 16]           ; argv[1]
   mov rsi, 10                   ; base
   mov rax, 0                    ; converted number
 
   .loop:
-    cmp byte [rdi], 0           ; is \0
+    cmp byte [rdi], 0           ; is \0?
     je .endloop
 
     mul rsi                     ; multiply by base 10
@@ -86,15 +85,11 @@ _start:
 
   mov r9, rax                   ; r9 = number of cities
 
-  mov [trajectory + r9], byte `\n`
+  mov [trajectory + r9], byte `\n` ; write newline to the template string that we are permutating
 
+  call print                    ; print first permutation
 
-  call print
-  push r12
-
-
-  mov r12, 0 ; i
-
+  mov r12, 0                    ; i
 .start:
   cmp r12, r9
   jge .end
@@ -128,11 +123,11 @@ _start:
   jmp .start
 
   .end:
-  pop r12
 
-  call flush
+  call flush         ; flush remaining buffer
 
-  mov rax, 60
+  ; exit(0)
+  mov rax, 60        ; SYS_EXIT
   mov rdi, 0 
   syscall
 
