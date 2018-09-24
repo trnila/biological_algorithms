@@ -1,7 +1,7 @@
 section .data
   trajectory: db `ABCDEFGHIJKLMNOPQRSTUVWXYZ`
   c: times 20 db 0 
-  out: times 200 db 0
+  out: times 2000 db 0
   err_args: db `Vstupni chyba\n\0`
   err_args_end:
 
@@ -18,9 +18,6 @@ print:
   ret
 
 swap:
-  mov rsi, 0
-  mov rdx, 0
-
   mov sil, [trajectory + r12] ; a[i]
   mov dl, [trajectory + rdi] ; 
   mov [trajectory + r12], dl
