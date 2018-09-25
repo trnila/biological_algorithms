@@ -35,18 +35,25 @@ def rastrigin(Da):
     return A*n + X**2 - A*np.cos(2 * np.pi * X) + Y**2 - A*np.cos(2 * np.pi * Y)
 
 
+class Space:
+    def __init__(self, sizes):
+        self.sizes = sizes
+
+    def gen_uniform_sample(self):
+        return [random.randrange(s[0], s[1]) for s in self.sizes]
+
 
 class BlindSearch:
-    def run(self, X, fitness):
+    def run(self, space, fitness):
         for i in range(100):
-            p = np.random.rand(2) * 2 - 1
+            p = space.gen_uniform_sample()
             z = fitness(p)
-            yield (p[0], p[1], z)
+            yield [(p[0], p[1], z)]
 
 
 class ClimbingSearch:
-    def run(self, X, fn):
-        start = np.random.rand(2) * 2 - 1
+    def run(self, space, fn):
+        start = space.gen_uniform_sample()
         for i in range(5):
             m = 1000
             arg = None
@@ -68,8 +75,8 @@ class MainWindow(QMainWindow):
         self.ui = ui_main_window.Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.ui.functions.addItem("rastrigin", rastrigin)
         self.ui.functions.addItem("sphere", sphere)
+        self.ui.functions.addItem("rastrigin", rastrigin)
         self.ui.functions.addItem("plane", plane)
 
         self.ui.algorithm.addItem("climbing search", ClimbingSearch)
@@ -79,7 +86,9 @@ class MainWindow(QMainWindow):
         self.ui.algorithm.currentIndexChanged.connect(self.update)
         self.ui.pushButton.clicked.connect(self.update)
 
-        static_canvas = self.s = FigureCanvas(Figure((5, 4)))
+        self.space = Space(2 * [[-6, 6]])
+
+        static_canvas = self.s = FigureCanvas(Figure())
         self.ui.centralwidget.layout().addWidget(static_canvas)
 
         self.ax = static_canvas.figure.add_subplot(121, projection='3d')
@@ -94,8 +103,8 @@ class MainWindow(QMainWindow):
         cid = static_canvas.mpl_connect('button_press_event', onclick)
 
     def update(self):
-        X = np.linspace(-6, 6, 50)
-        Y = np.linspace(-6, 6, 50)
+        X = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
+        Y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 50)
         X, Y = np.meshgrid(X, Y)
 
         fn = self.ui.functions.currentData()
@@ -105,16 +114,16 @@ class MainWindow(QMainWindow):
         self.ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.inferno, linewidth=0, antialiased=True, alpha=0.5)
 
         self.nn.clear()
-        p = self.nn.imshow(Z, extent=[-6, 6, -6, 6])
+        self.nn.imshow(Z, extent=np.array(self.space.sizes).flatten())
 
         algo = self.ui.algorithm.currentData()()
         colors = ['red', 'green', 'blue', 'purple', 'yellow']
         color = 0
-        for points in algo.run([X, Y], fn):
+        for points in algo.run(self.space, fn):
             for point in points:
                 self.ax.scatter(*point, color=colors[color])
                 self.nn.scatter(point[0], point[1], color=colors[color], s=20, edgecolor='black')
-            color += 1
+            color = (color + 1) % len(colors)
 
         self.s.draw_idle()
 
