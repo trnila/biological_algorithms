@@ -1,0 +1,12 @@
+- naimplementovat 5 testovacich funkci
+  https://en.wikipedia.org/wiki/Test_functions_for_optimization
+  - n dimenzionalni
+- blind search + climbing
+- srovnani vykonnosti
+
+D =  2
+D = 10
+D = 30
+
+scheffel
+- GUI
