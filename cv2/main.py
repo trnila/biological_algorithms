@@ -11,29 +11,12 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 import matplotlib.pyplot as plt
+import types
 
-
+import test_functions
 import ui_main_window
 
 app = QApplication([])
-
-
-def sphere(X):
-    return X[0] * X[0] + X[1] * X[1]
-
-
-def plane(X):
-    return X[0] * 0 + X[1] * 0
-
-
-#return A*n + X**2
-def rastrigin(Da):
-    X = Da[0]
-    Y = Da[1]
-    n = len(Da)
-    A = 10
-
-    return A*n + X**2 - A*np.cos(2 * np.pi * X) + Y**2 - A*np.cos(2 * np.pi * Y)
 
 
 class Space:
@@ -41,7 +24,7 @@ class Space:
         self.sizes = sizes
 
     def gen_uniform_sample(self):
-        return [random.randrange(s[0], s[1]) for s in self.sizes]
+        return np.array([random.randrange(s[0], s[1]) for s in self.sizes])
 
 
 class BlindSearch:
@@ -68,7 +51,7 @@ class ClimbingSearch:
     def run(self, space, fn, options):
         start = space.gen_uniform_sample()
         for i in range(options['iterations']):
-            m = 1000
+            m = np.Infinity
             arg = None
             points = []
             for x in range(options['population']):
@@ -88,9 +71,8 @@ class MainWindow(QMainWindow):
         self.ui = ui_main_window.Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.ui.functions.addItem("sphere", sphere)
-        self.ui.functions.addItem("rastrigin", rastrigin)
-        self.ui.functions.addItem("plane", plane)
+        for fn in [getattr(test_functions, fn) for fn in dir(test_functions) if isinstance(getattr(test_functions, fn), types.FunctionType)]:
+            self.ui.functions.addItem(fn.__name__, fn)
 
         self.ui.algorithm.addItem("climbing search", ClimbingSearch)
         self.ui.algorithm.addItem("blind", BlindSearch)
@@ -147,7 +129,8 @@ class MainWindow(QMainWindow):
 
         fn = self.ui.functions.currentData()
 
-        Z = fn([X, Y])
+        print(fn)
+        Z = fn(np.array([X, Y]))
         self.ax.clear()
         self.ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.inferno, linewidth=0, antialiased=True, alpha=0.5)
 
