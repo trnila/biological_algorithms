@@ -68,7 +68,7 @@ class MatplotlibRenderer(FigureCanvas):
         self.nn.clear()
         self.nn.imshow(Z, extent=np.array(space.sizes).flatten())
 
-        self.draw()
+        self.draw_idle()
 
     def update_points(self, points):
         colors = ['red', 'green', 'blue', 'purple', 'yellow']
@@ -79,4 +79,6 @@ class MatplotlibRenderer(FigureCanvas):
                 self.nn.scatter(point[0], point[1], color=colors[color], s=20, edgecolor='black')
 
             color = (color + 1) % len(colors)
+
+        self.draw_idle()
 

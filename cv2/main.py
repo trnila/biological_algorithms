@@ -54,6 +54,7 @@ class MainWindow(QMainWindow):
 
         self.setup_renderers()
         self.update_algo()
+        self.update()
 
     def setup_renderers(self):
         renderer_opengl = renderer.OpenglRenderer()
@@ -87,8 +88,6 @@ class MainWindow(QMainWindow):
             self.ui.gridLayout_2.addWidget(btn, row, 1, 1, 1)
             row += 1
 
-        self.update()
-
     def update(self):
         x = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
         y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 50)
@@ -108,8 +107,6 @@ class MainWindow(QMainWindow):
         for w in self.renderers:
             w.update_points(algo.run(self.space, fn, options))
 
-
-#        self.s.draw_idle()
 
 
 
