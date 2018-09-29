@@ -12,6 +12,9 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 import matplotlib.pyplot as plt
 import types
+import pyqtgraph.opengl as gl
+from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader, glEnable, GL_DEPTH_TEST, GL_BLEND, \
+    glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, glDisable, GL_CULL_FACE
 
 import test_functions
 import ui_main_window
@@ -123,13 +126,12 @@ class MainWindow(QMainWindow):
         self.update()
 
     def update(self):
-        X = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
-        Y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 50)
-        X, Y = np.meshgrid(X, Y)
+        x = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 200)
+        y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 200)
+        X, Y = np.meshgrid(x, y)
 
         fn = self.ui.functions.currentData()
 
-        print(fn)
         Z = fn(np.array([X, Y]))
         self.ax.clear()
         self.ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.inferno, linewidth=0, antialiased=True, alpha=0.5)
@@ -144,15 +146,64 @@ class MainWindow(QMainWindow):
 
         colors = ['red', 'green', 'blue', 'purple', 'yellow']
         color = 0
+        all_points = []
         for points in algo.run(self.space, fn, options):
             for point in points:
                 self.ax.scatter(*point, color=colors[color])
                 self.nn.scatter(point[0], point[1], color=colors[color], s=20, edgecolor='black')
+
+                all_points.append(point)
             color = (color + 1) % len(colors)
 
         self.s.draw_idle()
 
 
+        w = gl.GLViewWidget()
+        w.setMinimumSize(400, 400)
+        w.setCameraPosition(distance=50)
+        self.ui.gridLayout_2.layout().addWidget(w)
+
+
+        ## Add a grid to the view
+        g = gl.GLGridItem()
+        g.scale(1, 1, 1)
+        g.setDepthValue(10)  # draw grid after surfaces since they may be translucent
+        w.addItem(g)
+
+
+        p2 = gl.GLSurfacePlotItem(x=x, y=y, z=Z, shader='normalColormy')
+        p2.setGLOptions('translucent')
+        w.addItem(p2)
+
+        sp1 = gl.GLScatterPlotItem(pos=np.array(all_points), size=0.1, pxMode=False, color=(1, 1, 1, 1))
+        #sp1.setGLOptions('translucent')
+        sp1.setGLOptions('additive')
+        w.addItem(sp1)
+
+
+ShaderProgram('normalColormy', [
+    VertexShader("""
+        varying vec3 normal;
+        void main() {
+            // compute here for use in fragment shader
+            normal = normalize(gl_Normal);
+            gl_FrontColor = gl_Color;
+            gl_BackColor = gl_Color;
+            gl_Position = ftransform();
+        }
+    """),
+    FragmentShader("""
+        varying vec3 normal;
+        void main() {
+            vec4 color = gl_Color;
+            color.x = (normal.x + 1.0) * 0.5;
+            color.y = (normal.y + 1.0) * 0.5;
+            color.z = (normal.z + 1.0) * 0.5;
+            color.w = 0.7;
+            gl_FragColor = color;
+        }
+    """)
+]),
 
 win = MainWindow()
 win.setWindowTitle("cv:")
