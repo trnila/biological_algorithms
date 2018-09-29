@@ -16,6 +16,7 @@ import pyqtgraph.opengl as gl
 from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader, glEnable, GL_DEPTH_TEST, GL_BLEND, \
     glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, glDisable, GL_CULL_FACE
 
+import algorithms
 import renderer
 import test_functions
 import ui_main_window
@@ -31,76 +32,37 @@ class Space:
         return np.array([random.randrange(s[0], s[1]) for s in self.sizes])
 
 
-class BlindSearch:
-    def options(self):
-        return [
-            {'name': 'iterations', 'transform': int, 'default': 10}
-        ]
-
-    def run(self, space, fitness, options):
-        for i in range(options['iterations']):
-            p = space.gen_uniform_sample()
-            z = fitness(p)
-            yield [(p[0], p[1], z)]
-
-
-class ClimbingSearch:
-    def options(self):
-        return [
-            {'name': 'iterations', 'transform': int, 'default': 5},
-            {'name': 'population', 'transform': int, 'default': 5},
-            {'name': 'sigma', 'transform': float, 'default': 0.1, 'type': QDoubleSpinBox},
-        ]
-
-    def run(self, space, fn, options):
-        start = space.gen_uniform_sample()
-        for i in range(options['iterations']):
-            m = np.Infinity
-            arg = None
-            points = []
-            for x in range(options['population']):
-                p = start + np.random.randn(2) * options['sigma']
-                z = fn(p)
-                points.append((p[0], p[1], z))
-                if z < m:
-                    m = z
-                    arg = p
-            yield points
-            start = arg
-
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        self.space = Space(2 * [[-6, 6]])
+        self.renderers = []
+
         self.ui = ui_main_window.Ui_MainWindow()
         self.ui.setupUi(self)
 
         for fn in [getattr(test_functions, fn) for fn in dir(test_functions) if isinstance(getattr(test_functions, fn), types.FunctionType)]:
             self.ui.functions.addItem(fn.__name__, fn)
 
-        self.ui.algorithm.addItem("climbing search", ClimbingSearch)
-        self.ui.algorithm.addItem("blind", BlindSearch)
+        self.ui.algorithm.addItem("climbing search", algorithms.ClimbingSearch)
+        self.ui.algorithm.addItem("blind", algorithms.BlindSearch)
 
         self.ui.functions.currentIndexChanged.connect(self.update)
         self.ui.algorithm.currentIndexChanged.connect(self.update_algo)
         self.ui.pushButton.clicked.connect(self.update)
 
-        self.space = Space(2 * [[-6, 6]])
-
-
-
-
-        w = renderer.OpenglRenderer()
-        self.ui.tab.layout().addWidget(w)
-
-        w2 = renderer.MatplotlibRenderer()
-        self.ui.tab_2.layout().addWidget(w2)
-
-
-        self.renderers = [w, w2]
-
+        self.setup_renderers()
         self.update_algo()
 
+    def setup_renderers(self):
+        renderer_opengl = renderer.OpenglRenderer()
+        self.ui.tab.layout().addWidget(renderer_opengl)
+        self.renderers.append(renderer_opengl)
+
+        renderer_matplotlib = renderer.MatplotlibRenderer()
+        self.ui.tab_2.layout().addWidget(renderer_matplotlib)
+        self.renderers.append(renderer_matplotlib)
 
     def remove(self, layout):
         while layout.count():

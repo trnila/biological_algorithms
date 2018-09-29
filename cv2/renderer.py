@@ -68,6 +68,8 @@ class MatplotlibRenderer(FigureCanvas):
         self.nn.clear()
         self.nn.imshow(Z, extent=np.array(space.sizes).flatten())
 
+        self.draw()
+
     def update_points(self, points):
         colors = ['red', 'green', 'blue', 'purple', 'yellow']
         color = 0
