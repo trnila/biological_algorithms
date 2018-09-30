@@ -9,9 +9,15 @@ class BlindSearch:
         ]
 
     def run(self, space, fitness, options):
+        self.min = np.inf
         for i in range(options['iterations']):
             p = space.gen_uniform_sample()
             z = fitness(p)
+
+            if z < self.min:
+                self.min = z
+                self.arg = p
+
             yield [(p[0], p[1], z)]
 
 
@@ -24,17 +30,15 @@ class ClimbingSearch:
         ]
 
     def run(self, space, fn, options):
-        start = space.gen_uniform_sample()
+        self.arg = space.gen_uniform_sample()
+        self.min = np.inf
         for i in range(options['iterations']):
-            m = np.Infinity
-            arg = None
             points = []
             for x in range(options['population']):
-                p = start + np.random.randn(2) * options['sigma']
+                p = self.arg + np.random.randn(2) * options['sigma']
                 z = fn(p)
                 points.append((p[0], p[1], z))
-                if z < m:
-                    m = z
-                    arg = p
+                if z < self.min:
+                    self.min = z
+                    self.arg = p
             yield points
-            start = arg

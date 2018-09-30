@@ -107,6 +107,11 @@ class MainWindow(QMainWindow):
         for w in self.renderers:
             w.update_points(algo.run(self.space, fn, options))
 
+        self.ui.result.setText("f({arg}) = {val:.4f}".format(
+            arg=", ".join(["{:.4f}".format(i) for i in algo.arg]),
+            val=algo.min
+        ))
+
 
 
 
