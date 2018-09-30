@@ -29,7 +29,7 @@ class Space:
         self.sizes = sizes
 
     def gen_uniform_sample(self):
-        return np.array([random.randrange(s[0], s[1]) for s in self.sizes])
+        return np.array([random.uniform(s[0], s[1]) for s in self.sizes])
 
 
 
