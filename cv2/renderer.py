@@ -48,14 +48,28 @@ class OpenglRenderer(gl.GLViewWidget):
         self.surface_plot.setData(X, Y, Z, colors=colors)
 
     def update_points(self, points):
+        available_colors = [
+            (1, 0, 0, 1),
+            (0, 1, 0, 1),
+            (0, 0, 1, 1),
+            (1, 1, 0, 1),
+            (0, 1, 1, 1),
+            (1, 0, 1, 1),
+            (1, 1, 1, 1),
+            (0, 0, 0, 1),
+        ]
+        c = 0
         all_points = []
+        colors = []
         for point_group in points:
             for point in point_group:
                 all_points.append(point)
+                colors.append(available_colors[c])
+            c = (c + 1) % len(available_colors)
 
         self.points.resetTransform()
         self.points.scale(*self.scale)
-        self.points.setData(pos=np.array(all_points))
+        self.points.setData(pos=np.array(all_points), color=np.array(colors))
 
 
 class MatplotlibRenderer(FigureCanvas):
