@@ -1,42 +1,17 @@
-import random
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QWidget, QLineEdit, QLabel, \
-    QSpinBox, QDoubleSpinBox, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, \
+    QSpinBox, QDoubleSpinBox
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-import matplotlib.pyplot as plt
 import types
-import pyqtgraph.opengl as gl
-from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader, glEnable, glBlendFunc, GL_SRC_ALPHA
-from timeit import default_timer as timer
-
+from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader
 
 import algorithms
 import renderer
 import test_functions
 import ui_main_window
+from utils import Space, MeasureContext
 from widgets import StartPosWidget
-
-app = QApplication([])
-
-
-class Space:
-    def __init__(self, sizes):
-        self.sizes = sizes
-
-    def gen_uniform_sample(self):
-        return np.array([random.uniform(s[0], s[1]) for s in self.sizes])
-
-
-class MeasureContext:
-    def __init__(self, name):
-        self.name = name
-
-    def __enter__(self):
-        self.start = timer()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print(self.name, timer() - self.start)
 
 
 class MainWindow(QMainWindow):
@@ -138,9 +113,6 @@ class MainWindow(QMainWindow):
         ))
 
 
-
-
-
 ShaderProgram('normalColormy', [
     VertexShader("""
         varying vec3 normal;
@@ -162,6 +134,8 @@ ShaderProgram('normalColormy', [
         }
     """)
 ]),
+
+app = QApplication([])
 
 win = MainWindow()
 win.setWindowTitle("cv:")
