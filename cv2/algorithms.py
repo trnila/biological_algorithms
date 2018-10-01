@@ -1,5 +1,4 @@
 import numpy as np
-from PyQt5.QtWidgets import QDoubleSpinBox
 
 class Algorithm:
     def __init__(self):
@@ -39,22 +38,24 @@ class ClimbingSearch(Algorithm):
         ]
 
     def run(self, space, fn, options):
-        self.arg = space.gen_uniform_sample()
+        center = space.gen_uniform_sample()
+        self.arg = center
 
         if options['start_position']:
             self.arg = options['start_position']
-
 
         self.min = np.inf
         for i in range(options['iterations']):
             points = []
             for x in range(options['population']):
-                p = self.arg + np.random.randn(2) * options['sigma']
+                p = center + np.random.randn(2) * options['sigma']
                 z = fn(p)
-                points.append((p[0], p[1], z))
+                points.append((*p, z))
                 if options['comparator'](z, self.min):
                     self.min = z
                     self.arg = p
+
+            center = self.arg
             yield points
 
 
