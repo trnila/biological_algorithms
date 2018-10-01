@@ -15,6 +15,8 @@ import types
 import pyqtgraph.opengl as gl
 from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader, glEnable, GL_DEPTH_TEST, GL_BLEND, \
     glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, glDisable, GL_CULL_FACE
+from timeit import default_timer as timer
+
 
 import algorithms
 import renderer
@@ -32,6 +34,15 @@ class Space:
         return np.array([random.uniform(s[0], s[1]) for s in self.sizes])
 
 
+class MeasureContext:
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        self.start = timer()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print(self.name, timer() - self.start)
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -65,6 +76,9 @@ class MainWindow(QMainWindow):
         self.ui.tab_2.layout().addWidget(renderer_matplotlib)
         self.renderers.append(renderer_matplotlib)
 
+    def measure(self, name):
+        return MeasureContext(name)
+
     def remove(self, layout):
         while layout.count():
             child = layout.takeAt(0)
@@ -89,23 +103,26 @@ class MainWindow(QMainWindow):
             row += 1
 
     def update(self):
-        x = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
-        y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 50)
-        X, Y = np.meshgrid(x, y)
+        with self.measure("generate space"):
+            x = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
+            y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 50)
+            X, Y = np.meshgrid(x, y)
 
-        fn = self.ui.functions.currentData()
+            fn = self.ui.functions.currentData()
+            Z = fn(np.array([X, Y]))
 
-        Z = fn(np.array([X, Y]))
         algo = self.ui.algorithm.currentData()()
 
-        for w in self.renderers:
-            w.update_plane(x, y, Z, self.space)
+        with self.measure("update_plane"):
+            for w in self.renderers:
+                w.update_plane(x, y, Z, self.space)
 
 
         options = {opt['name']: opt['transform'](self.option_widgets[opt['name']].text()) for opt in algo.options()}
 
-        for w in self.renderers:
-            w.update_points(algo.run(self.space, fn, options))
+        with self.measure("update_points"):
+            for w in self.renderers:
+                w.update_points(algo.run(self.space, fn, options))
 
         self.ui.result.setText("f({arg}) = {val:.4f}".format(
             arg=", ".join(["{:.4f}".format(i) for i in algo.arg]),
