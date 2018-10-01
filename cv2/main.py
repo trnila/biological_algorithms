@@ -1,20 +1,13 @@
 import random
-import itertools
-from PyQt5 import QtCore, Qt, QtWidgets
-from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QWidget, QLineEdit, QLabel, \
     QSpinBox, QDoubleSpinBox, QHBoxLayout
-from matplotlib.backends.backend_qt5agg import (
-    FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 import matplotlib.pyplot as plt
 import types
 import pyqtgraph.opengl as gl
-from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader, glEnable, GL_DEPTH_TEST, GL_BLEND, \
-    glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, glDisable, GL_CULL_FACE
+from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader, glEnable, glBlendFunc, GL_SRC_ALPHA
 from timeit import default_timer as timer
 
 
@@ -22,6 +15,7 @@ import algorithms
 import renderer
 import test_functions
 import ui_main_window
+from widgets import StartPosWidget
 
 app = QApplication([])
 
@@ -43,27 +37,6 @@ class MeasureContext:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         print(self.name, timer() - self.start)
-
-
-class TestWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setLayout(QHBoxLayout())
-        self.label = QLabel()
-        self.layout().addWidget(self.label)
-        self.value = None
-
-    def mouseReleaseEvent(self, evt):
-        self.value = None
-        self.label.setText("")
-
-
-    def on_change(self, x, y):
-        self.value = (x, y)
-        self.label.setText(f"{x:.3f},{y:.3f}")
-
-    def text(self):
-        return self.value
 
 
 class MainWindow(QMainWindow):
@@ -95,12 +68,9 @@ class MainWindow(QMainWindow):
         self.ui.tab.layout().addWidget(renderer_opengl)
         self.renderers.append(renderer_opengl)
 
-        renderer_matplotlib = renderer.MatplotlibRenderer()
-        self.ui.tab_2.layout().addWidget(renderer_matplotlib)
-        self.renderers.append(renderer_matplotlib)
-
-        self.start_pos_widget = TestWidget()
-        renderer_matplotlib.position_changed.connect(self.start_pos_widget.on_change)
+        self.renderer_matplotlib = renderer.MatplotlibRenderer()
+        self.ui.tab_2.layout().addWidget(self.renderer_matplotlib)
+        self.renderers.append(self.renderer_matplotlib)
 
     def measure(self, name):
         return MeasureContext(name)
@@ -132,13 +102,13 @@ class MainWindow(QMainWindow):
             widget.setMaximum(1000)
             return widget
         elif option['type'] == 'position':
-            return self.start_pos_widget
+            widget = StartPosWidget()
+            self.renderer_matplotlib.position_changed.connect(widget.on_change)
+            return widget
         elif option['type'] == 'double':
             widget = QDoubleSpinBox()
             widget.setValue(option['default'])
             return widget
-
-        return option['type']()
 
     def update(self):
         with self.measure("generate space"):
