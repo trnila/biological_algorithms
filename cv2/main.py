@@ -113,15 +113,15 @@ class MainWindow(QMainWindow):
 
         algo = self.ui.algorithm.currentData()()
 
-        with self.measure("update_plane"):
-            for w in self.renderers:
+        for w in self.renderers:
+            with self.measure(f"update_plane on {w.__class__.__name__}"):
                 w.update_plane(x, y, Z, self.space)
 
 
         options = {opt['name']: opt['transform'](self.option_widgets[opt['name']].text()) for opt in algo.options()}
 
-        with self.measure("update_points"):
-            for w in self.renderers:
+        for w in self.renderers:
+            with self.measure(f"update_points on {w.__class__.__name__}"):
                 w.update_points(algo.run(self.space, fn, options))
 
         self.ui.result.setText("f({arg}) = {val:.4f}".format(
