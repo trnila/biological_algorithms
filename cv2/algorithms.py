@@ -22,7 +22,7 @@ class BlindSearch(Algorithm):
             p = space.gen_uniform_sample()
             z = fitness(p)
 
-            if z < self.min:
+            if options['comparator'](z, self.min):
                 self.min = z
                 self.arg = p
 
@@ -33,7 +33,7 @@ class ClimbingSearch(Algorithm):
     def options(self):
         return [
             {'name': 'iterations', 'transform': int, 'default': 5},
-            {'name': 'population', 'transform': int, 'default': 5},
+            {'name': 'population', 'transform': int, 'default': 50},
             {'name': 'sigma', 'transform': float, 'default': 0.1, 'type': 'double'},
             {'name': 'start_position', 'type': 'position', 'transform': lambda x: x}
         ]
@@ -52,7 +52,7 @@ class ClimbingSearch(Algorithm):
                 p = self.arg + np.random.randn(2) * options['sigma']
                 z = fn(p)
                 points.append((p[0], p[1], z))
-                if z < self.min:
+                if options['comparator'](z, self.min):
                     self.min = z
                     self.arg = p
             yield points

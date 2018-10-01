@@ -100,6 +100,7 @@ class MainWindow(QMainWindow):
 
 
         options = {opt['name']: opt['transform'](self.option_widgets[opt['name']].text()) for opt in algo.options()}
+        options['comparator'] = lambda x, y: x < y if self.ui.minMax.currentText() == 'min' else lambda x, y: y < x
 
         points = list(algo.run(self.space, fn, options))
         for w in self.renderers:
