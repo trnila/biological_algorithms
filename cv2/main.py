@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
 
         self.ui.algorithm.addItem("climbing search", algorithms.ClimbingSearch)
         self.ui.algorithm.addItem("blind", algorithms.BlindSearch)
+        self.ui.algorithm.addItem("test grid", algorithms.GridAlgorithm)
 
         self.ui.functions.currentIndexChanged.connect(self.update)
         self.ui.algorithm.currentIndexChanged.connect(self.update_algo)

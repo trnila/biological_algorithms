@@ -1,8 +1,16 @@
 import numpy as np
 from PyQt5.QtWidgets import QDoubleSpinBox
 
+class Algorithm:
+    def __init__(self):
+        self.min = 0
+        self.arg = []
 
-class BlindSearch:
+    def options(self):
+        return []
+
+
+class BlindSearch(Algorithm):
     def options(self):
         return [
             {'name': 'iterations', 'transform': int, 'default': 10}
@@ -21,7 +29,7 @@ class BlindSearch:
             yield [(p[0], p[1], z)]
 
 
-class ClimbingSearch:
+class ClimbingSearch(Algorithm):
     def options(self):
         return [
             {'name': 'iterations', 'transform': int, 'default': 5},
@@ -42,3 +50,21 @@ class ClimbingSearch:
                     self.min = z
                     self.arg = p
             yield points
+
+
+class GridAlgorithm(Algorithm):
+    def options(self):
+        return [
+            {'name': 'num', 'default': 10, 'transform': int}
+        ]
+
+    def run(self, space, fn, options):
+        self.arg = []
+        self.min = 0
+        points = []
+        for x in np.linspace(space.sizes[0][0], space.sizes[0][1], options['num']):
+            for y in np.linspace(space.sizes[1][0], space.sizes[1][1], options['num']):
+                points.append((x, y, fn(np.array([x, y]))))
+
+        yield points
+
