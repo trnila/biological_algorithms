@@ -103,9 +103,10 @@ class MainWindow(QMainWindow):
 
         options = {opt['name']: opt['transform'](self.option_widgets[opt['name']].text()) for opt in algo.options()}
 
+        points = list(algo.run(self.space, fn, options))
         for w in self.renderers:
             with self.measure(f"update_points on {w.__class__.__name__}"):
-                w.update_points(algo.run(self.space, fn, options))
+                w.update_points(points)
 
         self.ui.result.setText("f({arg}) = {val:.4f}".format(
             arg=", ".join(["{:.4f}".format(i) for i in algo.arg]),
