@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib import cm
+import colorsys
 
 
 class OpenglRenderer(gl.GLViewWidget):
@@ -26,11 +27,24 @@ class OpenglRenderer(gl.GLViewWidget):
         self.addItem(self.points)
 
     def update_plane(self, X, Y, Z, space):
-        self.scale = (1, 1, 10 / np.max(Z))
+        max_val = np.max(Z)
+        if max_val:
+            self.scale = (1, 1, 10 / max_val)
+        else:
+            self.scale = (1, 1, 1)
+
+        colors = []
+        for x, _ in enumerate(X):
+            for y, _ in enumerate(Y):
+                max_val = np.max(Z)
+
+                val = 0 if max_val == 0 else Z[x,y] / max_val
+                (r, g, b) = colorsys.hsv_to_rgb(val, 1.0, 1.0)
+                colors.append((r, g, b, 1))
 
         self.surface_plot.resetTransform()
         self.surface_plot.scale(*self.scale)
-        self.surface_plot.setData(X, Y, Z)
+        self.surface_plot.setData(X, Y, Z, colors=colors)
 
     def update_points(self, points):
         all_points = []

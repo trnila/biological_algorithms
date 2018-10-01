@@ -149,9 +149,7 @@ ShaderProgram('normalColormy', [
         varying vec3 normal;
         void main() {
             vec4 color = gl_Color;
-            color.x = (normal.x + 1.0) * 0.5;
-            color.y = (normal.y + 1.0) * 0.5;
-            color.z = (normal.z + 1.0) * 0.5;
+        
             color.w = 0.7;
             gl_FragColor = color;
         }
