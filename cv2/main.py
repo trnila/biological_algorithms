@@ -59,16 +59,14 @@ class MainWindow(QMainWindow):
     def update_algo(self):
         algo = self.ui.algorithm.currentData()()
 
-        row = 0
         self.option_widgets = {}
         self.remove(self.ui.gridLayout_2)
-        for option in algo.options():
-            self.ui.gridLayout_2.addWidget(QLabel(option['name']), row, 0, 1, 1)
+        for i, option in enumerate(algo.options()):
+            self.ui.gridLayout_2.addWidget(QLabel(option['name']), i / 2, (i % 2)*2, 1, 1)
             btn = self.create_widget(option)
             btn.setObjectName(option['name'])
             self.option_widgets[option['name']] = btn
-            self.ui.gridLayout_2.addWidget(btn, row, 1, 1, 1)
-            row += 1
+            self.ui.gridLayout_2.addWidget(btn, i / 2, (i % 2)*2 + 1, 1, 1)
 
     def create_widget(self, option):
         if 'type' not in option:
