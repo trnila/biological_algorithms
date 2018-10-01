@@ -1,5 +1,6 @@
 import pyqtgraph.opengl as gl
 import numpy as np
+from PyQt5 import QtCore
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib import cm
@@ -58,6 +59,8 @@ class OpenglRenderer(gl.GLViewWidget):
 
 
 class MatplotlibRenderer(FigureCanvas):
+    position_changed = QtCore.pyqtSignal(float, float)
+
     def __init__(self):
         super().__init__(Figure())
 
@@ -68,6 +71,7 @@ class MatplotlibRenderer(FigureCanvas):
             print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
               ('double' if event.dblclick else 'single', event.button,
                event.x, event.y, event.xdata, event.ydata))
+            self.position_changed.emit(event.xdata, event.ydata)
 
         self.mpl_connect('button_press_event', onclick)
 

@@ -34,11 +34,17 @@ class ClimbingSearch(Algorithm):
         return [
             {'name': 'iterations', 'transform': int, 'default': 5},
             {'name': 'population', 'transform': int, 'default': 5},
-            {'name': 'sigma', 'transform': float, 'default': 0.1, 'type': QDoubleSpinBox},
+            {'name': 'sigma', 'transform': float, 'default': 0.1, 'type': 'double'},
+            {'name': 'start_position', 'type': 'position', 'transform': lambda x: x}
         ]
 
     def run(self, space, fn, options):
         self.arg = space.gen_uniform_sample()
+
+        if options['start_position']:
+            self.arg = options['start_position']
+
+
         self.min = np.inf
         for i in range(options['iterations']):
             points = []

@@ -3,7 +3,7 @@ import itertools
 from PyQt5 import QtCore, Qt, QtWidgets
 from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QWidget, QLineEdit, QLabel, \
-    QSpinBox, QDoubleSpinBox
+    QSpinBox, QDoubleSpinBox, QHBoxLayout
 from matplotlib.backends.backend_qt5agg import (
     FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
@@ -44,6 +44,28 @@ class MeasureContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         print(self.name, timer() - self.start)
 
+
+class TestWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setLayout(QHBoxLayout())
+        self.label = QLabel()
+        self.layout().addWidget(self.label)
+        self.value = None
+
+    def mouseReleaseEvent(self, evt):
+        self.value = None
+        self.label.setText("")
+
+
+    def on_change(self, x, y):
+        self.value = (x, y)
+        self.label.setText(f"{x:.3f},{y:.3f}")
+
+    def text(self):
+        return self.value
+
+
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -77,6 +99,9 @@ class MainWindow(QMainWindow):
         self.ui.tab_2.layout().addWidget(renderer_matplotlib)
         self.renderers.append(renderer_matplotlib)
 
+        self.start_pos_widget = TestWidget()
+        renderer_matplotlib.position_changed.connect(self.start_pos_widget.on_change)
+
     def measure(self, name):
         return MeasureContext(name)
 
@@ -94,14 +119,26 @@ class MainWindow(QMainWindow):
         self.remove(self.ui.gridLayout_2)
         for option in algo.options():
             self.ui.gridLayout_2.addWidget(QLabel(option['name']), row, 0, 1, 1)
-            btn = QSpinBox() if not 'type' in option else option['type']()
-            btn.setValue(10)
+            btn = self.create_widget(option)
             btn.setObjectName(option['name'])
-            btn.setValue(option['default'])
-            btn.setMaximum(1000)
             self.option_widgets[option['name']] = btn
             self.ui.gridLayout_2.addWidget(btn, row, 1, 1, 1)
             row += 1
+
+    def create_widget(self, option):
+        if 'type' not in option:
+            widget = QSpinBox()
+            widget.setValue(option['default'])
+            widget.setMaximum(1000)
+            return widget
+        elif option['type'] == 'position':
+            return self.start_pos_widget
+        elif option['type'] == 'double':
+            widget = QDoubleSpinBox()
+            widget.setValue(option['default'])
+            return widget
+
+        return option['type']()
 
     def update(self):
         with self.measure("generate space"):
