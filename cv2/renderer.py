@@ -1,6 +1,5 @@
 import pyqtgraph.opengl as gl
 import numpy as np
-from PyQt5.QtWidgets import QWidget
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib import cm
@@ -9,31 +8,29 @@ from matplotlib import cm
 class OpenglRenderer(gl.GLViewWidget):
     def __init__(self):
         super().__init__()
-        
+        self.scale = (1, 1, 1)
         self.setMinimumSize(200, 200)
         self.setCameraPosition(distance=50)
 
-
-        ## Add a grid to the view
         g = gl.GLGridItem()
         g.scale(1, 1, 1)
         g.setDepthValue(10)  # draw grid after surfaces since they may be translucent
         self.addItem(g)
 
+        self.surface_plot = gl.GLSurfacePlotItem(shader='normalColormy')
+        self.surface_plot.setGLOptions('translucent')
+        self.addItem(self.surface_plot)
 
-        p2 = gl.GLSurfacePlotItem(shader='normalColormy')
-        p2.setGLOptions('translucent')
-        self.addItem(p2)
-        self.p2 = p2
-
-        sp1 = gl.GLScatterPlotItem(pos=np.array([]), size=0.1, pxMode=False, color=(1, 1, 1, 1))
-        #sp1.setGLOptions('translucent')
-        sp1.setGLOptions('additive')
-        self.addItem(sp1)
-        self.sp1 = sp1
+        self.points = gl.GLScatterPlotItem(pos=np.array([]), size=0.1, pxMode=False, color=(1, 1, 1, 1))
+        self.points.setGLOptions('additive')
+        self.addItem(self.points)
 
     def update_plane(self, X, Y, Z, space):
-        self.p2.setData(X, Y, Z)
+        self.scale = (1, 1, 10 / np.max(Z))
+
+        self.surface_plot.resetTransform()
+        self.surface_plot.scale(*self.scale)
+        self.surface_plot.setData(X, Y, Z)
 
     def update_points(self, points):
         all_points = []
@@ -41,8 +38,9 @@ class OpenglRenderer(gl.GLViewWidget):
             for point in point_group:
                 all_points.append(point)
 
-
-        self.sp1.setData(pos=np.array(all_points))
+        self.points.resetTransform()
+        self.points.scale(*self.scale)
+        self.points.setData(pos=np.array(all_points))
 
 
 class MatplotlibRenderer(FigureCanvas):
