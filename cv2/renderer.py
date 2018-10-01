@@ -23,7 +23,7 @@ class OpenglRenderer(gl.GLViewWidget):
         self.surface_plot.setGLOptions('translucent')
         self.addItem(self.surface_plot)
 
-        self.points = gl.GLScatterPlotItem(pos=np.array([]), size=0.1, pxMode=False, color=(1, 1, 1, 1))
+        self.points = gl.GLScatterPlotItem(pos=np.array([]), size=0.05, pxMode=False, color=(1, 1, 1, 1))
         self.points.setGLOptions('additive')
         self.addItem(self.points)
 
@@ -45,6 +45,7 @@ class OpenglRenderer(gl.GLViewWidget):
 
         self.surface_plot.resetTransform()
         self.surface_plot.scale(*self.scale)
+        self.surface_plot.rotate(90, 0, 0, 1)
         self.surface_plot.setData(X, Y, Z, colors=colors)
 
     def update_points(self, points):
