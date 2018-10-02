@@ -14,12 +14,12 @@ def sphere(X):
     return np.add.reduce(X*X)
 
 
-def rosenbrock(X):
+#def rosenbrock(X):
     #X1 = np.insert(X, 0, np.array([]))
-    X1 = np.delete(X, 0)
-    X = np.delete(X, -1)
+#    X1 = np.delete(X, 0)
+#    X = np.delete(X, -1)
 
-    return np.add.reduce(100*(X1 - X*X) + (1 - X)**2)
+#    return np.add.reduce(100*(X1 - X*X) + (1 - X)**2)
 
 def bukin_n6(X):
     if len(X) != 2:
@@ -75,6 +75,12 @@ def griewank(X):
 
     return 1 + np.add.reduce(X**2/4000) - prod
 
+
+def schwefel_2_20(X):
+    return np.add.reduce(np.abs(X))
+
+def schwefel_2_23(X):
+    return np.add.reduce(X**10)
 
 def plane(X):
     return np.add.reduce(X*0)
