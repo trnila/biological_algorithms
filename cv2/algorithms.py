@@ -39,10 +39,10 @@ class ClimbingSearch(Algorithm):
 
     def run(self, space, fn, options):
         center = space.gen_uniform_sample()
-        self.arg = center
-
         if options['start_position']:
-            self.arg = options['start_position']
+            center = options['start_position']
+
+        self.arg = center
 
         self.min = np.inf
         for i in range(options['iterations']):
