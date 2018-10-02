@@ -26,6 +26,7 @@ class MainWindow(QMainWindow):
         for fn in [getattr(test_functions, fn) for fn in dir(test_functions) if isinstance(getattr(test_functions, fn), types.FunctionType)]:
             self.ui.functions.addItem(fn.__name__, fn)
 
+        self.ui.algorithm.addItem("simulated anneling", algorithms.Anneling)
         self.ui.algorithm.addItem("climbing search", algorithms.ClimbingSearch)
         self.ui.algorithm.addItem("blind", algorithms.BlindSearch)
         self.ui.algorithm.addItem("test grid", algorithms.GridAlgorithm)
@@ -58,7 +59,6 @@ class MainWindow(QMainWindow):
 
     def update_algo(self):
         algo = self.ui.algorithm.currentData()()
-
         self.option_widgets = {}
         self.remove(self.ui.gridLayout_2)
         for i, option in enumerate(algo.options()):

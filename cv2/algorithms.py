@@ -59,6 +59,44 @@ class ClimbingSearch(Algorithm):
             yield points
 
 
+class Anneling(Algorithm):
+    def options(self):
+        return [
+            {'name': 'initial_temp', 'transform': float, 'default': 2000, 'type': 'double'},
+            {'name': 'final_temp', 'transform': float, 'default': 50, 'type': 'double'},
+            {'name': 'cycles', 'transform': int, 'default': 100},
+            {'name': 'alpha', 'default': 0.99, 'transform': float, 'type': 'double'}
+        ]
+
+    def run(self, space, fn, options):
+        x0 = space.gen_uniform_sample()
+        T = options['initial_temp']
+        while T > options['final_temp']:
+            x = x0 + np.random.randn(2) #0.5
+            delta = fn(x) - fn(x0)
+
+            # take better solution
+            if delta > 0:
+                x0 = x
+            else:
+                r = np.random.uniform(0, 1)
+                if r < np.exp(-delta/T):
+                    x0 = x
+
+            yield [(*x0, fn(x0))]
+
+            # reduce temperature
+            #T *= options['alpha']
+            T *= 0.99
+
+
+
+
+
+
+
+
+
 class GridAlgorithm(Algorithm):
     def options(self):
         return [

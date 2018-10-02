@@ -10,3 +10,23 @@ D = 30
 
 scheffel
 - GUI
+
+
+
+
+== 2 ==
+implementovat simulovane zihani
+porovnat s hill climbingem
+pro kazdou funkci provest 30x expriment (30 nejlepsich reseni) - vysledek zprumerujem
+stejny pocet zavolani fitness funkce
+D=2, 2000 ohodnoceni
+
+    prumer hill   prumer anneling
+f1
+f2
+f3
+f4
+f5
+
+
+lokalni vyhledavani: tabu search, hill climbing, tabu search
