@@ -18,5 +18,5 @@ class StartPosWidget(QWidget):
         self.value = (x, y)
         self.label.setText(f"{x:.3f},{y:.3f}")
 
-    def text(self):
+    def get_position(self):
         return self.value

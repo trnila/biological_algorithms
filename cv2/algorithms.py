@@ -1,5 +1,8 @@
 import numpy as np
 
+import algorithm_options
+
+
 class Algorithm:
     def __init__(self):
         self.min = 0
@@ -11,9 +14,9 @@ class Algorithm:
 
 class BlindSearch(Algorithm):
     def options(self):
-        return [
-            {'name': 'iterations', 'transform': int, 'default': 10}
-        ]
+        return {
+            'iterations': algorithm_options.IntOption(default=10, min=1, max=10000)
+        }
 
     def run(self, space, fitness, options):
         self.min = np.inf
@@ -30,12 +33,12 @@ class BlindSearch(Algorithm):
 
 class ClimbingSearch(Algorithm):
     def options(self):
-        return [
-            {'name': 'iterations', 'transform': int, 'default': 5},
-            {'name': 'population', 'transform': int, 'default': 50},
-            {'name': 'sigma', 'transform': float, 'default': 0.1, 'type': 'double'},
-            {'name': 'start_position', 'type': 'position', 'transform': lambda x: x}
-        ]
+        return {
+            'iterations': algorithm_options.IntOption(default=5, min=1, max=1000),
+            'population': algorithm_options.IntOption(default=10, min=1, max=1000),
+            'sigma': algorithm_options.FloatOption(default=0.1, min=0.0, max=1000),
+            'start_position': algorithm_options.StartPositionOption()
+        }
 
     def run(self, space, fn, options):
         center = space.gen_uniform_sample()
@@ -61,12 +64,11 @@ class ClimbingSearch(Algorithm):
 
 class Anneling(Algorithm):
     def options(self):
-        return [
-            {'name': 'initial_temp', 'transform': float, 'default': 2000, 'type': 'double'},
-            {'name': 'final_temp', 'transform': float, 'default': 50, 'type': 'double'},
-            {'name': 'cycles', 'transform': int, 'default': 100},
-            {'name': 'alpha', 'default': 0.99, 'transform': float, 'type': 'double'}
-        ]
+        return {
+            'initial_temp': algorithm_options.IntOption(default=2000, min=10, max=100000),
+            'final_temp': algorithm_options.IntOption(default=50, min=10, max=100000),
+            'alpha': algorithm_options.FloatOption(default=0.99)
+        }
 
     def run(self, space, fn, options):
         x0 = space.gen_uniform_sample()

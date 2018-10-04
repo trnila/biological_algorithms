@@ -11,7 +11,6 @@ import renderer
 import test_functions
 import ui_main_window
 from utils import Space, MeasureContext
-from widgets import StartPosWidget
 
 
 class MainWindow(QMainWindow):
@@ -27,9 +26,9 @@ class MainWindow(QMainWindow):
             self.ui.functions.addItem(fn.__name__, fn)
 
         self.ui.algorithm.addItem("simulated anneling", algorithms.Anneling)
-        self.ui.algorithm.addItem("climbing search", algorithms.ClimbingSearch)
         self.ui.algorithm.addItem("blind", algorithms.BlindSearch)
-        self.ui.algorithm.addItem("test grid", algorithms.GridAlgorithm)
+        self.ui.algorithm.addItem("climbing search", algorithms.ClimbingSearch)
+        #self.ui.algorithm.addItem("test grid", algorithms.GridAlgorithm)
 
         self.ui.functions.currentIndexChanged.connect(self.update)
         self.ui.algorithm.currentIndexChanged.connect(self.update_algo)
@@ -61,27 +60,13 @@ class MainWindow(QMainWindow):
         algo = self.ui.algorithm.currentData()()
         self.option_widgets = {}
         self.remove(self.ui.gridLayout_2)
-        for i, option in enumerate(algo.options()):
-            self.ui.gridLayout_2.addWidget(QLabel(option['name']), i / 2, (i % 2)*2, 1, 1)
-            btn = self.create_widget(option)
-            btn.setObjectName(option['name'])
-            self.option_widgets[option['name']] = btn
-            self.ui.gridLayout_2.addWidget(btn, i / 2, (i % 2)*2 + 1, 1, 1)
+        for i, (name, option) in enumerate(algo.options().items()):
+            self.ui.gridLayout_2.addWidget(QLabel(name), i / 2, (i % 2)*2, 1, 1)
+            widget = option.build_widget(self)
+            widget.setObjectName(name)
+            self.ui.gridLayout_2.addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
+            self.option_widgets[name] = widget
 
-    def create_widget(self, option):
-        if 'type' not in option:
-            widget = QSpinBox()
-            widget.setValue(option['default'])
-            widget.setMaximum(1000)
-            return widget
-        elif option['type'] == 'position':
-            widget = StartPosWidget()
-            self.renderer_matplotlib.position_changed.connect(widget.on_change)
-            return widget
-        elif option['type'] == 'double':
-            widget = QDoubleSpinBox()
-            widget.setValue(option['default'])
-            return widget
 
     def update(self):
         with self.measure("generate space"):
@@ -98,8 +83,7 @@ class MainWindow(QMainWindow):
             with self.measure(f"update_plane on {w.__class__.__name__}"):
                 w.update_plane(x, y, Z, self.space)
 
-
-        options = {opt['name']: opt['transform'](self.option_widgets[opt['name']].text()) for opt in algo.options()}
+        options = {name: option.get_value(self.option_widgets[name]) for name, option in algo.options().items()}
         options['comparator'] = lambda x, y: x < y if self.ui.minMax.currentText() == 'min' else lambda x, y: y < x
 
         points = list(algo.run(self.space, fn, options))
