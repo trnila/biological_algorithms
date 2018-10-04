@@ -67,11 +67,16 @@ class Anneling(Algorithm):
         return {
             'initial_temp': algorithm_options.IntOption(default=2000, min=10, max=100000),
             'final_temp': algorithm_options.IntOption(default=50, min=10, max=100000),
-            'alpha': algorithm_options.FloatOption(default=0.99)
+            'alpha': algorithm_options.FloatOption(default=0.99),
+            'sigma': algorithm_options.FloatOption(default=0.1, min=0.0, max=1000),
+            'start_position': algorithm_options.StartPositionOption()
         }
 
     def run(self, space, fn, options):
         x0 = space.gen_uniform_sample()
+        if options['start_position']:
+            x0 = np.array(options['start_position'])
+
         T = options['initial_temp']
         while T > options['final_temp']:
             x = x0 + np.random.randn(2) #0.5
@@ -88,8 +93,7 @@ class Anneling(Algorithm):
             yield [(*x0, fn(x0))]
 
             # reduce temperature
-            #T *= options['alpha']
-            T *= 0.99
+            T *= options['alpha']
 
 
 

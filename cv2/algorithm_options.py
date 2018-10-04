@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QSpinBox, QDoubleSpinBox
+import numpy as np
 
 from widgets import StartPosWidget
 
@@ -16,9 +17,9 @@ class IntOption(AlgorihmOption):
 
     def build_widget(self, app):
         widget = self.WIDGET_NAME()
-        widget.setValue(self.default)
         widget.setMinimum(self.min)
         widget.setMaximum(self.max)
+        widget.setValue(self.default)
         return widget
 
     def get_value(self, widget):
@@ -30,6 +31,7 @@ class FloatOption(IntOption):
 
     def get_value(self, widget):
         return float(widget.text())
+
 
 class StartPositionOption(AlgorihmOption):
     def build_widget(self, app):
