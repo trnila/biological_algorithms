@@ -23,23 +23,23 @@ class OpenglRenderer(gl.GLViewWidget):
         self.surface_plot.setGLOptions('translucent')
         self.addItem(self.surface_plot)
 
-        self.points = gl.GLScatterPlotItem(pos=np.array([]), size=0.05, pxMode=False, color=(1, 1, 1, 1))
+        self.points = gl.GLScatterPlotItem(pos=np.array([]), size=0.5, pxMode=False, color=(1, 1, 1, 1))
         self.points.setGLOptions('additive')
         self.addItem(self.points)
 
     def update_plane(self, X, Y, Z, space):
-        max_val = np.max(Z)
-        if max_val:
-            self.scale = (1, 1, 10 / max_val)
+        delta = np.max(Z) - np.min(Z)
+        if delta:
+            self.scale = (1, 1, 10 / delta)
         else:
             self.scale = (1, 1, 1)
 
         colors = []
         for x, _ in enumerate(X):
             for y, _ in enumerate(Y):
-                max_val = np.max(Z)
+                delta = np.max(Z)
 
-                val = 0 if max_val == 0 else Z[x,y] / max_val
+                val = 0 if delta == 0 else Z[x,y] / delta
                 (r, g, b) = colorsys.hsv_to_rgb(val, 1.0, 1.0)
                 colors.append((r, g, b, 1))
 

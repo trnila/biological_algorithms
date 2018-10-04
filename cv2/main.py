@@ -25,8 +25,8 @@ class MainWindow(QMainWindow):
         for fn in [getattr(test_functions, fn) for fn in dir(test_functions) if isinstance(getattr(test_functions, fn), types.FunctionType)]:
             self.ui.functions.addItem(fn.__name__, fn)
 
-        self.ui.algorithm.addItem("simulated anneling", algorithms.Anneling)
         self.ui.algorithm.addItem("blind", algorithms.BlindSearch)
+        self.ui.algorithm.addItem("simulated anneling", algorithms.Anneling)
         self.ui.algorithm.addItem("climbing search", algorithms.ClimbingSearch)
         #self.ui.algorithm.addItem("test grid", algorithms.GridAlgorithm)
 
@@ -67,7 +67,6 @@ class MainWindow(QMainWindow):
             self.ui.gridLayout_2.addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
             self.option_widgets[name] = widget
 
-
     def update(self):
         with self.measure("generate space"):
             x = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
@@ -84,17 +83,25 @@ class MainWindow(QMainWindow):
                 w.update_plane(x, y, Z, self.space)
 
         options = {name: option.get_value(self.option_widgets[name]) for name, option in algo.options().items()}
-        options['comparator'] = lambda x, y: x < y if self.ui.minMax.currentText() == 'min' else lambda x, y: y < x
+        cost_fn = (lambda X: -fn(X)) if self.ui.minMax.currentText() == 'max' else fn
+        points = list(self.fill_z(algo.run(self.space, cost_fn, options), fn))
 
-        points = list(algo.run(self.space, fn, options))
         for w in self.renderers:
             with self.measure(f"update_points on {w.__class__.__name__}"):
                 w.update_points(points)
 
         self.ui.result.setText("f({arg}) = {val:.4f}".format(
             arg=", ".join(["{:.4f}".format(i) for i in algo.arg]),
-            val=algo.min
+            val=fn(algo.arg)
         ))
+
+    def fill_z(self, groups, fn):
+        for group in groups:
+            points_in_group = []
+            for point in group:
+                points_in_group.append((*point, fn(point)))
+            yield points_in_group
+
 
 
 ShaderProgram('normalColormy', [

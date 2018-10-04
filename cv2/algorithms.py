@@ -5,7 +5,6 @@ import algorithm_options
 
 class Algorithm:
     def __init__(self):
-        self.min = 0
         self.arg = []
 
     def options(self):
@@ -19,16 +18,16 @@ class BlindSearch(Algorithm):
         }
 
     def run(self, space, fitness, options):
-        self.min = np.inf
+        extreme = np.inf
         for i in range(options['iterations']):
             p = space.gen_uniform_sample()
             z = fitness(p)
 
-            if options['comparator'](z, self.min):
-                self.min = z
+            if z < extreme:
+                extreme = z
                 self.arg = p
 
-            yield [(p[0], p[1], z)]
+            yield [p]
 
 
 class ClimbingSearch(Algorithm):
@@ -47,15 +46,15 @@ class ClimbingSearch(Algorithm):
 
         self.arg = center
 
-        self.min = np.inf
+        extreme = np.inf
         for i in range(options['iterations']):
             points = []
             for x in range(options['population']):
                 p = center + np.random.randn(2) * options['sigma']
                 z = fn(p)
-                points.append((*p, z))
-                if options['comparator'](z, self.min):
-                    self.min = z
+                points.append(p)
+                if z < extreme:
+                    extreme = z
                     self.arg = p
 
             center = self.arg
@@ -90,10 +89,12 @@ class Anneling(Algorithm):
                 if r < np.exp(-delta/T):
                     x0 = x
 
-            yield [(*x0, fn(x0))]
+            yield [x0]
 
             # reduce temperature
             T *= options['alpha']
+
+        self.arg = x0
 
 
 
@@ -111,7 +112,7 @@ class GridAlgorithm(Algorithm):
 
     def run(self, space, fn, options):
         self.arg = []
-        self.min = 0
+        extreme = 0
         points = []
         for x in np.linspace(space.sizes[0][0], space.sizes[0][1], options['num']):
             for y in np.linspace(space.sizes[1][0], space.sizes[1][1], options['num']):
