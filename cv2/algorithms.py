@@ -78,7 +78,7 @@ class Anneling(Algorithm):
 
         T = options['initial_temp']
         while T > options['final_temp']:
-            x = x0 + np.random.randn(2) #0.5
+            x = x0 + np.random.randn(2) * options['sigma']
             delta = fn(x) - fn(x0)
 
             # take better solution
