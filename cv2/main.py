@@ -1,15 +1,12 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, \
-    QSpinBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-import types
 from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader
 
-import algorithms
 import renderer
-import test_functions
 import ui_main_window
+import utils
 from utils import Space, MeasureContext
 
 
@@ -22,13 +19,11 @@ class MainWindow(QMainWindow):
         self.ui = ui_main_window.Ui_MainWindow()
         self.ui.setupUi(self)
 
-        for fn in [getattr(test_functions, fn) for fn in dir(test_functions) if isinstance(getattr(test_functions, fn), types.FunctionType)]:
+        for fn in utils.all_functions():
             self.ui.functions.addItem(fn.__name__, fn)
 
-        self.ui.algorithm.addItem("blind", algorithms.BlindSearch)
-        self.ui.algorithm.addItem("simulated anneling", algorithms.Anneling)
-        self.ui.algorithm.addItem("climbing search", algorithms.ClimbingSearch)
-        #self.ui.algorithm.addItem("test grid", algorithms.GridAlgorithm)
+        for algo in utils.all_algorithms():
+            self.ui.algorithm.addItem(algo.__name__, algo)
 
         self.ui.functions.currentIndexChanged.connect(self.update)
         self.ui.algorithm.currentIndexChanged.connect(self.update_algo)
