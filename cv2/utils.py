@@ -27,6 +27,16 @@ class MeasureContext:
         print(self.name, timer() - self.start)
 
 
+class CountCallsProxy:
+    def __init__(self, fn):
+        self.fn = fn
+        self.called_count = 0
+
+    def __call__(self, *args, **kwargs):
+        self.called_count += 1
+        return self.fn(*args, **kwargs)
+
+
 def all_functions():
     return [getattr(test_functions, fn) for fn in dir(test_functions) if isinstance(getattr(test_functions, fn), types.FunctionType)]
 

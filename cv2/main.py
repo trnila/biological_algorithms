@@ -78,16 +78,17 @@ class MainWindow(QMainWindow):
                 w.update_plane(x, y, Z, self.space)
 
         options = {name: option.get_value(self.option_widgets[name]) for name, option in algo.options().items()}
-        cost_fn = (lambda X: -fn(X)) if self.ui.minMax.currentText() == 'max' else fn
+        cost_fn = utils.CountCallsProxy((lambda X: -fn(X)) if self.ui.minMax.currentText() == 'max' else fn)
         points = list(self.fill_z(algo.run(self.space, cost_fn, options), fn))
 
         for w in self.renderers:
             with self.measure(f"update_points on {w.__class__.__name__}"):
                 w.update_points(points)
 
-        self.ui.result.setText("f({arg}) = {val:.4f}".format(
+        self.ui.result.setText("f({arg}) = {val:.4f}; cost fn called {called}x".format(
             arg=", ".join(["{:.4f}".format(i) for i in algo.arg]),
-            val=fn(algo.arg)
+            val=fn(algo.arg),
+            called=cost_fn.called_count,
         ))
 
     def fill_z(self, groups, fn):
