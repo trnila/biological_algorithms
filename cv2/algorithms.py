@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 import algorithm_options
@@ -14,7 +16,7 @@ class Algorithm:
 class BlindSearch(Algorithm):
     def options(self):
         return {
-            'iterations': algorithm_options.IntOption(default=10, min=1, max=10000)
+            'iterations': algorithm_options.IntOption(default=2000, min=1, max=10000)
         }
 
     def run(self, space, fitness, options):
@@ -33,8 +35,8 @@ class BlindSearch(Algorithm):
 class ClimbingSearch(Algorithm):
     def options(self):
         return {
-            'iterations': algorithm_options.IntOption(default=5, min=1, max=1000),
-            'population': algorithm_options.IntOption(default=10, min=1, max=1000),
+            'iterations': algorithm_options.IntOption(default=100, min=1, max=1000),
+            'population': algorithm_options.IntOption(default=20, min=1, max=1000),
             'sigma': algorithm_options.FloatOption(default=0.1, min=0.0, max=1000),
             'start_position': algorithm_options.StartPositionOption()
         }
@@ -64,8 +66,8 @@ class ClimbingSearch(Algorithm):
 class Anneling(Algorithm):
     def options(self):
         return {
-            'initial_temp': algorithm_options.IntOption(default=2000, min=10, max=100000),
-            'final_temp': algorithm_options.IntOption(default=50, min=10, max=100000),
+            'initial_temp': algorithm_options.FloatOption(default=2000, min=10, max=100000),
+            'final_temp': algorithm_options.FloatOption(default=0.00000375, min=0.0000000001, max=100000),
             'alpha': algorithm_options.FloatOption(default=0.99),
             'sigma': algorithm_options.FloatOption(default=0.1, min=0.0, max=1000),
             'start_position': algorithm_options.StartPositionOption()
@@ -76,18 +78,21 @@ class Anneling(Algorithm):
         if options['start_position']:
             x0 = np.array(options['start_position'])
 
+        prev_val = np.inf
         T = options['initial_temp']
         while T > options['final_temp']:
             x = x0 + np.random.randn(2) * options['sigma']
-            delta = fn(x) - fn(x0)
+            z = fn(x)
 
             # take better solution
-            if delta > 0:
+            if z < prev_val:
                 x0 = x
+                prev_val = z
             else:
                 r = np.random.uniform(0, 1)
-                if r < np.exp(-delta/T):
+                if r < np.exp(-(z - prev_val)/T):
                     x0 = x
+                    prev_val = z
 
             yield [x0]
 
