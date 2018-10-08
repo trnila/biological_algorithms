@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 import numpy as np
+import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader
@@ -7,6 +8,7 @@ from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader
 import renderer
 import ui_main_window
 import utils
+from ipython import ConsoleWidget
 from utils import Space, MeasureContext
 
 
@@ -29,6 +31,14 @@ class MainWindow(QMainWindow):
         self.ui.algorithm.currentIndexChanged.connect(self.update_algo)
         self.ui.pushButton.clicked.connect(self.update)
 
+        self.console = ConsoleWidget()
+        self.console.execute("%matplotlib inline")
+        self.console.push_vars({
+            'np': np,
+            'plt': plt,
+        })
+        self.ui.tab_3.layout().addWidget(self.console)
+
         self.setup_renderers()
         self.update_algo()
         self.update()
@@ -40,7 +50,7 @@ class MainWindow(QMainWindow):
 
         self.renderer_matplotlib = renderer.MatplotlibRenderer()
         self.ui.tab_2.layout().addWidget(self.renderer_matplotlib)
-        self.renderers.append(self.renderer_matplotlib)
+        #self.renderers.append(self.renderer_matplotlib)
 
     def measure(self, name):
         return MeasureContext(name)
@@ -90,6 +100,8 @@ class MainWindow(QMainWindow):
             val=fn(algo.arg),
             called=cost_fn.called_count,
         ))
+
+        self.console.push_vars({"points": np.array(points)})
 
     def fill_z(self, groups, fn):
         for group in groups:
