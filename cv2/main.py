@@ -101,7 +101,12 @@ class MainWindow(QMainWindow):
             called=cost_fn.called_count,
         ))
 
-        self.console.push_vars({"points": np.array(points)})
+        np_points = np.array(points)
+        self.console.push_vars({
+            'points': np_points,
+            'values': np_points.reshape(2000, 3)[:, 2],
+            'fn': fn,
+        })
 
     def fill_z(self, groups, fn):
         for group in groups:
