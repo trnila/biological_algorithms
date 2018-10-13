@@ -105,14 +105,14 @@
      </layout>
     </item>
     <item>
-     <layout class="QGridLayout" name="gridLayout_2"/>
-    </item>
-    <item>
      <widget class="QLabel" name="result">
       <property name="text">
        <string/>
       </property>
      </widget>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_2"/>
     </item>
     <item>
      <widget class="QTabWidget" name="tabWidget">
