@@ -151,7 +151,7 @@ class Soma(Algorithm):
             yield self.transform(new_population)
             population = new_population
 
-        self.arg = np.array([0, 0])
+        self.arg = leader.arg
 
 
     def find_leader(self, population, fn):
