@@ -1,6 +1,7 @@
 import sys
 
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,8 +23,12 @@ class Simulation:
         self.fn = fn
         self.points = points
 
+    @property
+    def max_steps(self):
+        return len(self.points)
+
     def step_by(self, n):
-        self.step = max(0, min(len(self.points), self.step + n))
+        self.step = max(1, min(self.max_steps, self.step + n))
 
     def step_forward(self):
         self.step_by(1)
@@ -55,7 +60,7 @@ class MainWindow(QMainWindow):
         self.ui.startBtn.clicked.connect(self.refresh)
         self.ui.finishBtn.clicked.connect(lambda: self.step_by(sys.maxsize))
         self.ui.stepBtn.clicked.connect(lambda: self.step_by(1))
-        self.ui.stepBack.clicked.connect(lambda: self.step_by(-1))
+        self.ui.stepBackBtn.clicked.connect(lambda: self.step_by(-1))
 
         self.console = ConsoleWidget()
         self.console.execute("%matplotlib inline")
@@ -150,6 +155,8 @@ class MainWindow(QMainWindow):
             #            'values': np_points.reshape(2000, 3)[:, 2],
             'fn': self.simulation.fn,
         })
+
+        self.ui.stepLabel.setText(f"{self.simulation.step}/{self.simulation.max_steps}")
 
     def fill_z(self, groups, fn):
         for group in groups:
