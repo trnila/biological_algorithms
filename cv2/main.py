@@ -1,3 +1,4 @@
+from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,7 +28,7 @@ class MainWindow(QMainWindow):
         for algo in utils.all_algorithms():
             self.ui.algorithm.addItem(algo.__name__, algo)
 
-        self.ui.functions.currentIndexChanged.connect(self.update)
+        self.ui.functions.currentIndexChanged.connect(self.update_fn)
         self.ui.algorithm.currentIndexChanged.connect(self.update_algo)
         self.ui.pushButton.clicked.connect(self.update)
 
@@ -41,6 +42,7 @@ class MainWindow(QMainWindow):
 
         self.setup_renderers()
         self.update_algo()
+        self.update_fn()
         self.update()
 
     def setup_renderers(self):
@@ -61,6 +63,7 @@ class MainWindow(QMainWindow):
             if child.widget():
                 child.widget().deleteLater()
 
+    @pyqtSlot()
     def update_algo(self):
         algo = self.ui.algorithm.currentData()()
         self.option_widgets = {}
@@ -72,6 +75,10 @@ class MainWindow(QMainWindow):
             self.ui.gridLayout_2.addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
             self.option_widgets[name] = widget
 
+        self.update()
+
+    @pyqtSlot()
+    def update_fn(self):
         with self.measure("generate space"):
             x = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
             y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 50)
@@ -84,6 +91,9 @@ class MainWindow(QMainWindow):
             with self.measure(f"update_plane on {w.__class__.__name__}"):
                 w.update_plane(x, y, Z, self.space)
 
+        self.update()
+
+    @pyqtSlot()
     def update(self):
         algo = self.ui.algorithm.currentData()()
         fn = self.ui.functions.currentData()
