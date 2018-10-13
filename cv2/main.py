@@ -1,3 +1,5 @@
+import sys
+
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 import numpy as np
@@ -13,11 +15,31 @@ from ipython import ConsoleWidget
 from utils import Space, MeasureContext
 
 
+class Simulation:
+    def __init__(self, algo, fn, points):
+        self.step = 1
+        self.algo = algo
+        self.fn = fn
+        self.points = points
+
+    def step_by(self, n):
+        self.step = max(0, min(len(self.points), self.step + n))
+
+    def step_forward(self):
+        self.step_by(1)
+
+    def step_back(self):
+        self.step_by(-1)
+
+    def get_points(self):
+        return self.points[0:self.step]
+
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.space = Space(2 * [[-6, 6]])
         self.renderers = []
+        self.simulation = None
 
         self.ui = ui_main_window.Ui_MainWindow()
         self.ui.setupUi(self)
@@ -28,9 +50,12 @@ class MainWindow(QMainWindow):
         for algo in utils.all_algorithms():
             self.ui.algorithm.addItem(algo.__name__, algo)
 
-        self.ui.functions.currentIndexChanged.connect(self.update_fn)
-        self.ui.algorithm.currentIndexChanged.connect(self.update_algo)
-        self.ui.pushButton.clicked.connect(self.update)
+        self.ui.functions.currentIndexChanged.connect(self.refresh)
+        self.ui.algorithm.currentIndexChanged.connect(self.refresh)
+        self.ui.startBtn.clicked.connect(self.refresh)
+        self.ui.finishBtn.clicked.connect(lambda: self.step_by(sys.maxsize))
+        self.ui.stepBtn.clicked.connect(lambda: self.step_by(1))
+        self.ui.stepBack.clicked.connect(lambda: self.step_by(-1))
 
         self.console = ConsoleWidget()
         self.console.execute("%matplotlib inline")
@@ -41,9 +66,7 @@ class MainWindow(QMainWindow):
         self.ui.tab_3.layout().addWidget(self.console)
 
         self.setup_renderers()
-        self.update_algo()
-        self.update_fn()
-        self.update()
+        self.refresh()
 
     def setup_renderers(self):
         renderer_opengl = renderer.OpenglRenderer()
@@ -63,6 +86,13 @@ class MainWindow(QMainWindow):
             if child.widget():
                 child.widget().deleteLater()
 
+    def refresh(self):
+        self.update_algo()
+        self.update_fn()
+        self.start_simulation()
+        self.step_by(0)
+
+
     @pyqtSlot()
     def update_algo(self):
         algo = self.ui.algorithm.currentData()()
@@ -74,8 +104,6 @@ class MainWindow(QMainWindow):
             widget.setObjectName(name)
             self.ui.gridLayout_2.addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
             self.option_widgets[name] = widget
-
-        self.update()
 
     @pyqtSlot()
     def update_fn(self):
@@ -91,10 +119,8 @@ class MainWindow(QMainWindow):
             with self.measure(f"update_plane on {w.__class__.__name__}"):
                 w.update_plane(x, y, Z, self.space)
 
-        self.update()
-
     @pyqtSlot()
-    def update(self):
+    def start_simulation(self):
         algo = self.ui.algorithm.currentData()()
         fn = self.ui.functions.currentData()
 
@@ -102,21 +128,27 @@ class MainWindow(QMainWindow):
         cost_fn = utils.CountCallsProxy((lambda X: -fn(X)) if self.ui.minMax.currentText() == 'max' else fn)
         points = list(self.fill_z(algo.run(self.space, cost_fn, options), fn))
 
+        self.simulation = Simulation(algo, fn, points)
+
+    def step_by(self, count=1):
+        self.simulation.step_by(count)
+
+        points = self.simulation.get_points()
         for w in self.renderers:
             with self.measure(f"update_points on {w.__class__.__name__}"):
                 w.update_points(points)
 
         self.ui.result.setText("f({arg}) = {val:.4f}; cost fn called {called}x".format(
-            arg=", ".join(["{:.4f}".format(i) for i in algo.arg]),
-            val=fn(algo.arg),
-            called=cost_fn.called_count,
+            arg=", ".join(["{:.4f}".format(i) for i in self.simulation.algo.arg]),
+            val=self.simulation.fn(self.simulation.algo.arg),
+            called=0 #self.simulation.cost_fn.called_count,
         ))
 
         np_points = np.array(points)
         self.console.push_vars({
             'points': np_points,
-#            'values': np_points.reshape(2000, 3)[:, 2],
-            'fn': fn,
+            #            'values': np_points.reshape(2000, 3)[:, 2],
+            'fn': self.simulation.fn,
         })
 
     def fill_z(self, groups, fn):
