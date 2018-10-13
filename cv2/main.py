@@ -25,8 +25,11 @@ class Simulation:
         self.space = space
 
         cost_fn = utils.CountCallsProxy((lambda X: -fn(X)) if not options['min'] else fn)
-        self.steps = list(algo.run(self.space, cost_fn, options))
-        self.cost_fn_called = cost_fn.called_count
+
+        self.steps = []
+        for step in algo.run(self.space, cost_fn, options):
+            step.cost_fn_called = cost_fn.called_count
+            self.steps.append(step)
 
     @property
     def max_steps(self):
@@ -153,7 +156,7 @@ class MainWindow(QMainWindow):
         self.ui.result.setText("f({arg}) = {val:.4f}; cost fn called {called}x".format(
             arg=", ".join(["{:.4f}".format(i) for i in self.simulation.current_step().best.arg]),
             val=self.simulation.current_step().best.cost,
-            called=self.simulation.cost_fn_called,
+            called=self.simulation.current_step().cost_fn_called,
         ))
 
         np_points = np.array(points)
