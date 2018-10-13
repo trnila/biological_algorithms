@@ -125,7 +125,7 @@ class Soma(Algorithm):
         yield self.transform(population)
 
         for i in range(options['migrations']):
-            leader = self.find_leader(population, fn)
+            leader = self.find_leader(population)
 
             new_population = []
             for obj in population:
@@ -153,9 +153,7 @@ class Soma(Algorithm):
 
         self.arg = leader.arg
 
-
-    def find_leader(self, population, fn):
-        max = 0
+    def find_leader(self, population):
         leader = population[0]
         for unit in population:
             if unit.cost < leader.cost:
