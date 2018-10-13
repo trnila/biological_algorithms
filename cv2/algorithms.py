@@ -53,7 +53,7 @@ class ClimbingSearch(Algorithm):
         for i in range(options['iterations']):
             points = []
             for x in range(options['population']):
-                p = center + np.random.randn(2) * options['sigma']
+                p = space.gen_in_range(lambda: center + np.random.randn(2) * options['sigma'])
                 z = fn(p)
                 points.append(p)
                 if z < extreme:
@@ -82,7 +82,7 @@ class Anneling(Algorithm):
         prev_val = np.inf
         T = options['initial_temp']
         while T > options['final_temp']:
-            x = x0 + np.random.randn(2) * options['sigma']
+            x = space.gen_in_range(lambda: x0 + np.random.randn(2) * options['sigma'])
             z = fn(x)
 
             # take better solution
@@ -138,12 +138,12 @@ class Soma(Algorithm):
                 while t < options['path_length']:
                     x = np.random.uniform(0, 1, size=2) < options['prt']
                     next_pos = obj.arg + diff * t * x
+                    if space.in_range(next_pos):
+                        z = fn(next_pos)
 
-                    z = fn(next_pos)
-
-                    if z < best_value:
-                        best_value = z
-                        best_pos = next_pos
+                        if z < best_value:
+                            best_value = z
+                            best_pos = next_pos
 
                     t += options['step_size']
 

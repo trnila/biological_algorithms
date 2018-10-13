@@ -15,6 +15,21 @@ class Space:
     def gen_uniform_sample(self):
         return np.array([random.uniform(s[0], s[1]) for s in self.sizes])
 
+    def in_range(self, p):
+        for value, constraint in zip(p, self.sizes):
+            if value < constraint[0] or value > constraint[1]:
+                return False
+
+        return True
+
+    def gen_in_range(self, cb):
+        for i in range(100):
+            val = cb()
+            if self.in_range(val):
+                return val
+        return None
+
+
 
 class MeasureContext:
     def __init__(self, name):
