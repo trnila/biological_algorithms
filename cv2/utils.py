@@ -12,6 +12,14 @@ class Space:
     def __init__(self, sizes):
         self.sizes = sizes
 
+    def gen_uniform_unit(self, fn):
+        p = self.gen_uniform_sample()
+        return algorithms.Unit(p, fn(p))
+
+    def gen_unit_in_range(self, fitness, cb):
+        p = self.gen_in_range(cb)
+        return algorithms.Unit(p, fitness(p))
+
     def gen_uniform_sample(self):
         return np.array([random.uniform(s[0], s[1]) for s in self.sizes])
 

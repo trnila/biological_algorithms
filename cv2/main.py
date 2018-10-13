@@ -17,15 +17,20 @@ from utils import Space, MeasureContext
 
 
 class Simulation:
-    def __init__(self, algo, fn, points):
+    def __init__(self, space, algo, fn, options):
         self.step = 1
         self.algo = algo
         self.fn = fn
-        self.points = points
+        self.options = options
+        self.space = space
+
+        cost_fn = utils.CountCallsProxy((lambda X: -fn(X)) if not options['min'] else fn)
+        self.steps = list(algo.run(self.space, cost_fn, options))
+        self.cost_fn_called = cost_fn.called_count
 
     @property
     def max_steps(self):
-        return len(self.points)
+        return len(self.steps) - 1
 
     def step_by(self, n):
         self.step = max(1, min(self.max_steps, self.step + n))
@@ -36,8 +41,12 @@ class Simulation:
     def step_back(self):
         self.step_by(-1)
 
+    def current_step(self):
+        return self.steps[self.step]
+
     def get_points(self):
-        return self.points[0:self.step]
+        return self.steps[0:self.step]
+
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -130,10 +139,8 @@ class MainWindow(QMainWindow):
         fn = self.ui.functions.currentData()
 
         options = {name: option.get_value(self.option_widgets[name]) for name, option in algo.options().items()}
-        cost_fn = utils.CountCallsProxy((lambda X: -fn(X)) if self.ui.minMax.currentText() == 'max' else fn)
-        points = list(self.fill_z(algo.run(self.space, cost_fn, options), fn))
-
-        self.simulation = Simulation(algo, fn, points)
+        options['min'] = self.ui.minMax.currentText() == 'min'
+        self.simulation = Simulation(self.space, algo, fn, options)
 
     def step_by(self, count=1):
         self.simulation.step_by(count)
@@ -144,9 +151,9 @@ class MainWindow(QMainWindow):
                 w.update_points(points)
 
         self.ui.result.setText("f({arg}) = {val:.4f}; cost fn called {called}x".format(
-            arg=", ".join(["{:.4f}".format(i) for i in self.simulation.algo.arg]),
-            val=self.simulation.fn(self.simulation.algo.arg),
-            called=0 #self.simulation.cost_fn.called_count,
+            arg=", ".join(["{:.4f}".format(i) for i in self.simulation.current_step().best.arg]),
+            val=self.simulation.current_step().best.cost,
+            called=self.simulation.cost_fn_called,
         ))
 
         np_points = np.array(points)

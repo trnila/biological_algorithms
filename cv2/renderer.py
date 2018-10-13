@@ -70,8 +70,8 @@ class OpenglRenderer(gl.GLViewWidget):
         all_points = []
         colors = []
         for point_group in points:
-            for point in point_group:
-                all_points.append(point)
+            for point in point_group.points:
+                all_points.append(point.to_vec())
                 colors.append(available_colors[c])
             c = (c + 1) % len(available_colors)
 

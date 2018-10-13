@@ -1,9 +1,21 @@
-import math
-
 import numpy as np
-import collections
 
 import algorithm_options
+
+class Unit:
+    def __init__(self, arg, cost):
+        self.arg = arg
+        self.cost = cost
+
+    def to_vec(self):
+        return np.array([*self.arg, self.cost])
+
+INFINITY_UNIT = Unit(None, np.inf)
+
+class SimulationStep:
+    def __init__(self, points, best=None):
+        self.points = points
+        self.best = best
 
 
 class Algorithm:
@@ -21,16 +33,14 @@ class BlindSearch(Algorithm):
         }
 
     def run(self, space, fitness, options):
-        extreme = np.inf
+        extreme = INFINITY_UNIT
         for i in range(options['iterations']):
-            p = space.gen_uniform_sample()
-            z = fitness(p)
+            next_unit = space.gen_uniform_unit(fitness)
 
-            if z < extreme:
-                extreme = z
-                self.arg = p
+            if next_unit.cost < extreme.cost:
+                extreme = next_unit
 
-            yield [p]
+            yield SimulationStep([next_unit], best=extreme)
 
 
 class ClimbingSearch(Algorithm):
@@ -43,25 +53,21 @@ class ClimbingSearch(Algorithm):
         }
 
     def run(self, space, fn, options):
-        center = space.gen_uniform_sample()
+        center = space.gen_uniform_unit(fn)
         if options['start_position']:
             center = options['start_position']
 
-        self.arg = center
-
-        extreme = np.inf
+        extreme = INFINITY_UNIT
         for i in range(options['iterations']):
             points = []
             for x in range(options['population']):
-                p = space.gen_in_range(lambda: center + np.random.randn(2) * options['sigma'])
-                z = fn(p)
+                p = space.gen_unit_in_range(fn, lambda: center.arg + np.random.randn(2) * options['sigma'])
                 points.append(p)
-                if z < extreme:
-                    extreme = z
-                    self.arg = p
+                if p.cost < extreme.cost:
+                    extreme = p
 
-            center = self.arg
-            yield points
+            center = extreme
+            yield SimulationStep(points, best=extreme)
 
 
 class Anneling(Algorithm):
@@ -75,35 +81,27 @@ class Anneling(Algorithm):
         }
 
     def run(self, space, fn, options):
-        x0 = space.gen_uniform_sample()
+        x0 = space.gen_uniform_unit(fn)
         if options['start_position']:
             x0 = np.array(options['start_position'])
 
-        prev_val = np.inf
         T = options['initial_temp']
         while T > options['final_temp']:
-            x = space.gen_in_range(lambda: x0 + np.random.randn(2) * options['sigma'])
-            z = fn(x)
+            x = space.gen_unit_in_range(fn, lambda: x0.arg + np.random.randn(2) * options['sigma'])
 
             # take better solution
-            if z < prev_val:
+            if x.cost < x0.cost:
                 x0 = x
-                prev_val = z
             else:
                 r = np.random.uniform(0, 1)
-                if r < np.exp(-(z - prev_val)/T):
+                if r < np.exp(-(x.cost - x0.cost)/T):
                     x0 = x
-                    prev_val = z
 
-            yield [x0]
+            yield SimulationStep([x0], best=x0)
 
             # reduce temperature
             T *= options['alpha']
 
-        self.arg = x0
-
-
-Unit = collections.namedtuple('Unit', ['arg', 'cost'])
 
 class Soma(Algorithm):
     def options(self):
@@ -115,18 +113,14 @@ class Soma(Algorithm):
             'migrations': algorithm_options.IntOption(default=10, min=2, max=100000),
         }
 
-    def transform(self, values):
-        return [value.arg for value in values]
-
     def run(self, space, fn, options):
         points = [space.gen_uniform_sample() for _ in range(options['pop_size'])]
         population = [Unit(arg=pos, cost=fn(pos)) for pos in points]
 
-        yield self.transform(population)
+        leader = self.find_leader(population)
+        yield SimulationStep(population, best=leader)
 
         for i in range(options['migrations']):
-            leader = self.find_leader(population)
-
             new_population = []
             for obj in population:
                 best_pos = None
@@ -148,10 +142,10 @@ class Soma(Algorithm):
                     t += options['step_size']
 
                 new_population.append(Unit(arg=best_pos, cost=best_value))
-            yield self.transform(new_population)
             population = new_population
 
-        self.arg = leader.arg
+            leader = self.find_leader(population)
+            yield SimulationStep(new_population, best=leader)
 
     def find_leader(self, population):
         leader = population[0]
@@ -160,10 +154,6 @@ class Soma(Algorithm):
                 leader = unit
 
         return leader
-
-
-
-
 
 
 class GridAlgorithm(Algorithm):
