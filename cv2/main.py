@@ -72,7 +72,6 @@ class MainWindow(QMainWindow):
             self.ui.gridLayout_2.addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
             self.option_widgets[name] = widget
 
-    def update(self):
         with self.measure("generate space"):
             x = np.linspace(self.space.sizes[0][0], self.space.sizes[0][1], 50)
             y = np.linspace(self.space.sizes[1][0], self.space.sizes[1][1], 50)
@@ -81,11 +80,13 @@ class MainWindow(QMainWindow):
             fn = self.ui.functions.currentData()
             Z = fn(np.array([X, Y]))
 
-        algo = self.ui.algorithm.currentData()()
-
         for w in self.renderers:
             with self.measure(f"update_plane on {w.__class__.__name__}"):
                 w.update_plane(x, y, Z, self.space)
+
+    def update(self):
+        algo = self.ui.algorithm.currentData()()
+        fn = self.ui.functions.currentData()
 
         options = {name: option.get_value(self.option_widgets[name]) for name, option in algo.options().items()}
         cost_fn = utils.CountCallsProxy((lambda X: -fn(X)) if self.ui.minMax.currentText() == 'max' else fn)
