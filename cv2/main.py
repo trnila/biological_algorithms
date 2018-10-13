@@ -104,7 +104,7 @@ class MainWindow(QMainWindow):
         np_points = np.array(points)
         self.console.push_vars({
             'points': np_points,
-            'values': np_points.reshape(2000, 3)[:, 2],
+#            'values': np_points.reshape(2000, 3)[:, 2],
             'fn': fn,
         })
 
