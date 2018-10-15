@@ -50,7 +50,7 @@ class FloatOption(AlgorihmOption):
 class StartPositionOption(AlgorihmOption):
     def build_widget(self, app):
         widget = StartPosWidget()
-        app.renderer_matplotlib.position_changed.connect(widget.on_change)
+        #app.renderer_matplotlib.position_changed.connect(widget.on_change)
         return widget
 
     def get_value(self, widget):

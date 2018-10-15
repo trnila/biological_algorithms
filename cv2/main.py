@@ -1,8 +1,7 @@
 import sys
 
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QGridLayout
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -51,12 +50,31 @@ class Simulation:
         return self.steps[0:self.step]
 
 
+class OptionWidget(QWidget):
+    def __init__(self, parent, options):
+        super().__init__(parent)
+        self.options = options
+        self.option_widgets = {}
+        self.setLayout(QGridLayout())
+
+        for i, (name, option) in enumerate(options.items()):
+            self.layout().addWidget(QLabel(name), i / 2, (i % 2)*2, 1, 1)
+            widget = option.build_widget(self)
+            widget.setObjectName(name)
+            self.layout().addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
+            self.option_widgets[name] = widget
+
+    def get_options(self):
+        return {name: option.get_value(self.option_widgets[name]) for name, option in self.options.items()}
+
+
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.space = Space(2 * [[-6, 6]])
         self.renderers = []
         self.simulation = None
+        self.algorithm_option_widgets = {}
 
         self.ui = ui_main_window.Ui_MainWindow()
         self.ui.setupUi(self)
@@ -66,6 +84,10 @@ class MainWindow(QMainWindow):
 
         for algo in utils.all_algorithms():
             self.ui.algorithm.addItem(algo.__name__, algo)
+            widget = OptionWidget(self, algo().options())
+            widget.hide()
+            self.algorithm_option_widgets[algo.__name__] = widget
+            self.ui.algorithmOptions.addWidget(widget)
 
         self.ui.functions.currentIndexChanged.connect(self.refresh)
         self.ui.algorithm.currentIndexChanged.connect(self.refresh)
@@ -97,12 +119,6 @@ class MainWindow(QMainWindow):
     def measure(self, name):
         return MeasureContext(name)
 
-    def remove(self, layout):
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
     def refresh(self):
         self.update_algo()
         self.update_fn()
@@ -113,14 +129,11 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def update_algo(self):
         algo = self.ui.algorithm.currentData()()
-        self.option_widgets = {}
-        self.remove(self.ui.gridLayout_2)
-        for i, (name, option) in enumerate(algo.options().items()):
-            self.ui.gridLayout_2.addWidget(QLabel(name), i / 2, (i % 2)*2, 1, 1)
-            widget = option.build_widget(self)
-            widget.setObjectName(name)
-            self.ui.gridLayout_2.addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
-            self.option_widgets[name] = widget
+
+        for widget in self.algorithm_option_widgets.values():
+            widget.hide()
+
+        self.algorithm_option_widgets[type(algo).__name__].show()
 
     @pyqtSlot()
     def update_fn(self):
@@ -141,7 +154,7 @@ class MainWindow(QMainWindow):
         algo = self.ui.algorithm.currentData()()
         fn = self.ui.functions.currentData()
 
-        options = {name: option.get_value(self.option_widgets[name]) for name, option in algo.options().items()}
+        options = self.algorithm_option_widgets[type(algo).__name__].get_options()
         options['min'] = self.ui.minMax.currentText() == 'min'
         self.simulation = Simulation(self.space, algo, fn, options)
 
