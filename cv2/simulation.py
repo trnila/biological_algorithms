@@ -14,6 +14,14 @@ class Simulation:
         self.steps = []
         for step in algo.run(self.space, cost_fn, options):
             step.cost_fn_called = cost_fn.called_count
+
+            def fix(unit):
+                unit.cost *= -1
+                return unit
+
+            if not options['min']:
+                step.points = [fix(p) for p in step.points]
+
             self.steps.append(step)
 
     @property
