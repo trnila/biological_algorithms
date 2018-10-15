@@ -1,71 +1,16 @@
 import sys
 
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QGridLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
-from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader
-
 import renderer
 import ui_main_window
 import utils
 from ipython import ConsoleWidget
+from simulation import Simulation
 from utils import Space, MeasureContext
-
-
-class Simulation:
-    def __init__(self, space, algo, fn, options):
-        self.step = 1
-        self.algo = algo
-        self.fn = fn
-        self.options = options
-        self.space = space
-
-        cost_fn = utils.CountCallsProxy((lambda X: -fn(X)) if not options['min'] else fn)
-
-        self.steps = []
-        for step in algo.run(self.space, cost_fn, options):
-            step.cost_fn_called = cost_fn.called_count
-            self.steps.append(step)
-
-    @property
-    def max_steps(self):
-        return len(self.steps) - 1
-
-    def step_by(self, n):
-        self.step = max(1, min(self.max_steps, self.step + n))
-
-    def step_forward(self):
-        self.step_by(1)
-
-    def step_back(self):
-        self.step_by(-1)
-
-    def current_step(self):
-        return self.steps[self.step]
-
-    def get_points(self):
-        return self.steps[0:self.step]
-
-
-class OptionWidget(QWidget):
-    def __init__(self, parent, options):
-        super().__init__(parent)
-        self.options = options
-        self.option_widgets = {}
-        self.setLayout(QGridLayout())
-
-        for i, (name, option) in enumerate(options.items()):
-            self.layout().addWidget(QLabel(name), i / 2, (i % 2)*2, 1, 1)
-            widget = option.build_widget(self)
-            widget.setObjectName(name)
-            self.layout().addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
-            self.option_widgets[name] = widget
-
-    def get_options(self):
-        return {name: option.get_value(self.option_widgets[name]) for name, option in self.options.items()}
+from widgets import OptionWidget
 
 
 class MainWindow(QMainWindow):
@@ -188,29 +133,6 @@ class MainWindow(QMainWindow):
                 points_in_group.append((*point, fn(point)))
             yield points_in_group
 
-
-
-ShaderProgram('normalColormy', [
-    VertexShader("""
-        varying vec3 normal;
-        void main() {
-            // compute here for use in fragment shader
-            normal = normalize(gl_Normal);
-            gl_FrontColor = gl_Color;
-            gl_BackColor = gl_Color;
-            gl_Position = ftransform();
-        }
-    """),
-    FragmentShader("""
-        varying vec3 normal;
-        void main() {
-            vec4 color = gl_Color;
-        
-            color.w = 0.7;
-            gl_FragColor = color;
-        }
-    """)
-]),
 
 app = QApplication([])
 

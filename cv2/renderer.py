@@ -4,6 +4,8 @@ from PyQt5 import QtCore
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
+from pyqtgraph.opengl.shaders import ShaderProgram, VertexShader, FragmentShader
 import colorsys
 
 
@@ -120,3 +122,25 @@ class MatplotlibRenderer(FigureCanvas):
 
         self.draw_idle()
 
+
+ShaderProgram('normalColormy', [
+    VertexShader("""
+        varying vec3 normal;
+        void main() {
+            // compute here for use in fragment shader
+            normal = normalize(gl_Normal);
+            gl_FrontColor = gl_Color;
+            gl_BackColor = gl_Color;
+            gl_Position = ftransform();
+        }
+    """),
+    FragmentShader("""
+        varying vec3 normal;
+        void main() {
+            vec4 color = gl_Color;
+
+            color.w = 0.7;
+            gl_FragColor = color;
+        }
+    """)
+]),

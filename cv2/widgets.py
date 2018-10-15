@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QGridLayout
 
 
 class StartPosWidget(QWidget):
@@ -20,3 +20,21 @@ class StartPosWidget(QWidget):
 
     def get_position(self):
         return self.value
+
+
+class OptionWidget(QWidget):
+    def __init__(self, parent, options):
+        super().__init__(parent)
+        self.options = options
+        self.option_widgets = {}
+        self.setLayout(QGridLayout())
+
+        for i, (name, option) in enumerate(options.items()):
+            self.layout().addWidget(QLabel(name), i / 2, (i % 2)*2, 1, 1)
+            widget = option.build_widget(self)
+            widget.setObjectName(name)
+            self.layout().addWidget(widget, i / 2, (i % 2)*2 + 1, 1, 1)
+            self.option_widgets[name] = widget
+
+    def get_options(self):
+        return {name: option.get_value(self.option_widgets[name]) for name, option in self.options.items()}
