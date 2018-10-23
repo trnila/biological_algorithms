@@ -66,6 +66,7 @@ def all_functions():
 
 def all_algorithms():
     return [
+        algorithms.PSO,
         algorithms.Soma,
         algorithms.BlindSearch,
         algorithms.ClimbingSearch,

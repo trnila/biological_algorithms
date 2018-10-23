@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 
 import algorithm_options
@@ -10,6 +12,9 @@ class Unit:
     def to_vec(self):
         return np.array([*self.arg, self.cost])
 
+    def __repr__(self):
+        return f"f({', '.join(map(str, self.arg))}) = {self.cost}"
+
 INFINITY_UNIT = Unit(None, np.inf)
 
 class SimulationStep:
@@ -19,11 +24,19 @@ class SimulationStep:
 
 
 class Algorithm:
-    def __init__(self):
-        self.arg = []
-
     def options(self):
         return []
+
+    def find_leader(self, population):
+        leader = population[0]
+        for unit in population:
+            if unit.cost < leader.cost:
+                leader = unit
+
+        return leader
+
+    def get_better(self, a, b):
+        return a if a.cost < b.cost else b
 
 
 class BlindSearch(Algorithm):
@@ -147,13 +160,52 @@ class Soma(Algorithm):
             leader = self.find_leader(population)
             yield SimulationStep(new_population, best=leader)
 
-    def find_leader(self, population):
-        leader = population[0]
-        for unit in population:
-            if unit.cost < leader.cost:
-                leader = unit
 
-        return leader
+class PSO(Algorithm):
+    def options(self):
+        return {
+            'migrations': algorithm_options.IntOption(default=100, min=2, max=100000),
+            'pop_size': algorithm_options.IntOption(default=10, min=2, max=100000),
+
+            'w_start': algorithm_options.FloatOption(default=0.9),
+            'w_end': algorithm_options.FloatOption(default=0.4),
+
+            'c1': algorithm_options.FloatOption(default=1),
+            'c2': algorithm_options.FloatOption(default=1),
+        }
+
+    def run(self, space, fn, options):
+        def make_unit(pos):
+            unit = Unit(arg=pos, cost=fn(pos))
+            unit.personal_best = unit
+            unit.speed = random.uniform(0, abs(space.sizes[0][0] - space.sizes[0][1])/20)
+            return unit
+
+        population = [make_unit(space.gen_uniform_sample()) for _ in range(options['pop_size'])]
+        gbest = self.find_leader(population)
+        yield SimulationStep(population, best=gbest)
+
+        for iteration in range(options['migrations']):
+            new_population = []
+            for unit in population:
+                w = options['w_start'] - (options['w_start'] - options['w_end']) * iteration / options['migrations']
+
+                for i in range(40):
+                    new_speed = w * unit.speed + options['c1'] * random.uniform(0, 1) * (unit.personal_best.arg - unit.arg) \
+                        + options['c2'] * random.uniform(0, 1) * (gbest.arg - unit.arg)
+
+                    new_pos = unit.arg + new_speed
+                    if space.in_range(new_pos):
+                        break
+
+                new_unit = Unit(arg=new_pos, cost=fn(new_pos))
+                new_unit.speed = new_speed
+                new_unit.personal_best = self.get_better(unit.personal_best, new_unit)
+                gbest = self.get_better(gbest, new_unit)
+                new_population.append(new_unit)
+
+            population = new_population
+            yield SimulationStep(population, best=gbest)
 
 
 class GridAlgorithm(Algorithm):
