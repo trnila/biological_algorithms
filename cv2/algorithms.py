@@ -178,7 +178,7 @@ class PSO(Algorithm):
         def make_unit(pos):
             unit = Unit(arg=pos, cost=fn(pos))
             unit.personal_best = unit
-            unit.speed = random.uniform(0, abs(space.sizes[0][0] - space.sizes[0][1])/20)
+            unit.speed = random.uniform(0, (abs(space.sizes[0][0]) + abs(space.sizes[0][1]))/20)
             return unit
 
         population = [make_unit(space.gen_uniform_sample()) for _ in range(options['pop_size'])]
