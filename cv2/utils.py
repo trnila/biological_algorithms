@@ -37,6 +37,20 @@ class Space:
                 return val
         return None
 
+    def cap(self, arg):
+        for dim, limits in enumerate(self.sizes):
+            arg[dim] = max(limits[0], min(arg[dim], limits[1]))
+        return arg
+
+    def make_unit(self, arg, fn, **kwargs):
+        capped = self.cap(arg)
+        unit = algorithms.Unit(capped, fn(capped))
+
+        for key, val in kwargs.items():
+            setattr(unit, key, val)
+
+        return unit
+
 
 
 class MeasureContext:

@@ -190,16 +190,14 @@ class PSO(Algorithm):
             for unit in population:
                 w = options['w_start'] - (options['w_start'] - options['w_end']) * iteration / options['migrations']
 
-                for i in range(40):
-                    new_speed = w * unit.speed + options['c1'] * random.uniform(0, 1) * (unit.personal_best.arg - unit.arg) \
-                        + options['c2'] * random.uniform(0, 1) * (gbest.arg - unit.arg)
+                new_speed = w * unit.speed + options['c1'] * random.uniform(0, 1) * (unit.personal_best.arg - unit.arg) \
+                    + options['c2'] * random.uniform(0, 1) * (gbest.arg - unit.arg)
+                new_pos = unit.arg + new_speed
 
-                    new_pos = unit.arg + new_speed
-                    if space.in_range(new_pos):
-                        break
-
-                new_unit = Unit(arg=new_pos, cost=fn(new_pos))
-                new_unit.speed = new_speed
+                new_unit = space.make_unit(
+                    new_pos, fn,
+                    speed=new_speed
+                )
                 new_unit.personal_best = self.get_better(unit.personal_best, new_unit)
                 gbest = self.get_better(gbest, new_unit)
                 new_population.append(new_unit)
