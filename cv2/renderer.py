@@ -51,12 +51,15 @@ class OpenglRenderer(gl.GLViewWidget):
         self.surface_plot.rotate(90, 0, 0, 1)
         self.surface_plot.setData(X, Y, Z, colors=colors)
 
-    def update_points(self, points):
+    def update_points(self, points, last_only):
         if len(points) <= 0:
             self.points.hide()
             return
 
         self.points.show()
+
+        if last_only:
+            points = points[-1:]
 
         available_colors = [
             (1, 0, 0, 1),

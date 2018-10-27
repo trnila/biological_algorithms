@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5.QtWidgets import QApplication, QMainWindow
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,6 +40,10 @@ class MainWindow(QMainWindow):
         self.ui.finishBtn.clicked.connect(lambda: self.step_by(sys.maxsize))
         self.ui.stepBtn.clicked.connect(lambda: self.step_by(1))
         self.ui.stepBackBtn.clicked.connect(lambda: self.step_by(-1))
+        self.ui.autoplay.toggled.connect(self.autoplay_clicked)
+
+        self.animation_timer = QTimer()
+        self.animation_timer.timeout.connect(self.autoplay_next)
 
         self.console = ConsoleWidget()
         self.console.execute("%matplotlib inline")
@@ -51,6 +55,21 @@ class MainWindow(QMainWindow):
 
         self.setup_renderers()
         self.refresh()
+
+    def autoplay_clicked(self, autoplay):
+        if not autoplay:
+            self.animation_timer.stop()
+        else:
+            if self.simulation.is_end():
+                self.simulation.set_step(1)
+            self.animation_timer.start(100)
+
+    def autoplay_next(self):
+        self.step_by()
+
+        if self.simulation.is_end():
+            self.animation_timer.stop()
+            self.ui.autoplay.setChecked(False)
 
     def setup_renderers(self):
         renderer_opengl = renderer.OpenglRenderer()
@@ -109,7 +128,7 @@ class MainWindow(QMainWindow):
         points = self.simulation.get_points()
         for w in self.renderers:
             with self.measure(f"update_points on {w.__class__.__name__}"):
-                w.update_points(points)
+                w.update_points(points, self.ui.last_state.isChecked())
 
         self.ui.result.setText("f({arg}) = {val:.4f}; cost fn called {called}x".format(
             arg=", ".join(["{:.4f}".format(i) for i in self.simulation.current_step().best.arg]),

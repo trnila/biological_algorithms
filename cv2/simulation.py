@@ -28,6 +28,12 @@ class Simulation:
     def max_steps(self):
         return len(self.steps) - 1
 
+    def is_end(self):
+        return self.step >= self.max_steps
+
+    def set_step(self, n):
+        self.step = n
+
     def step_by(self, n):
         self.step = max(1, min(self.max_steps, self.step + n))
 

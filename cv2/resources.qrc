@@ -2,5 +2,7 @@
   <qresource prefix="icons">
     <file>icons/go-previous.png</file>
     <file>icons/go-next.png</file>
+    <file>icons/media-playback-pause.png</file>
+    <file>icons/media-playback-start.png</file>
   </qresource>
 </RCC>
