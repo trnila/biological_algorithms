@@ -124,13 +124,14 @@ class Soma(Algorithm):
             'pop_size': algorithm_options.IntOption(default=10, min=2, max=100000),
             'prt': algorithm_options.FloatOption(default=0.1),
             'migrations': algorithm_options.IntOption(default=10, min=2, max=100000),
+            'strategy': algorithm_options.ChoiceOption(['AllToOne', 'AllToAllRand']),
         }
 
     def run(self, space, fn, options):
         points = [space.gen_uniform_sample() for _ in range(options['pop_size'])]
         population = [Unit(arg=pos, cost=fn(pos)) for pos in points]
 
-        leader = self.find_leader(population)
+        leader = self.find_leader(population, options['strategy'])
         yield SimulationStep(population, best=leader)
 
         for i in range(options['migrations']):
@@ -157,8 +158,15 @@ class Soma(Algorithm):
                 new_population.append(Unit(arg=best_pos, cost=best_value))
             population = new_population
 
-            leader = self.find_leader(population)
+            leader = self.find_leader(population, options['strategy'])
             yield SimulationStep(new_population, best=leader)
+
+    def find_leader(self, population, strategy):
+        if strategy == 'AllToOne':
+            return super(Soma, self).find_leader(population)
+
+        return random.choice(population)
+
 
 
 class PSO(Algorithm):

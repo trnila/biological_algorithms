@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QSpinBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QSpinBox, QDoubleSpinBox, QComboBox
 import numpy as np
 
 from widgets import StartPosWidget
@@ -46,6 +46,17 @@ class FloatOption(AlgorihmOption):
     def get_value(self, widget):
         return float(widget.text())
 
+class ChoiceOption(AlgorihmOption):
+    def __init__(self, choices):
+        self.choices = choices
+
+    def build_widget(self, app):
+        widget = QComboBox()
+        widget.addItems(self.choices)
+        return widget
+
+    def get_value(self, widget):
+        return widget.currentText()
 
 class StartPositionOption(AlgorihmOption):
     def build_widget(self, app):
