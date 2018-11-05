@@ -1,5 +1,8 @@
 import numpy as np
 
+def shekel(X):
+    return 1.0 / (np.add.reduce((X -3) * X))
+
 
 def rastrigin(X, A=10):
     n = len(X)
@@ -61,7 +64,7 @@ def holder_table(X):
     x = X[0]
     y = X[1]
 
-    return -np.abs(np.sin(x) * np.cos(y) * np.exp(np.abs(1 - np.sqrt(x**2 + y**2)/np.pi)))
+    return -np.abs(np.sin(x) * np.cos(y) * np.exp(np.abs(1 - np.sqrt(x**2 + y**2)/np.pi))) + 4
 
 
 def styblinski_tang(X):

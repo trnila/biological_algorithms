@@ -4,6 +4,7 @@ from timeit import default_timer as timer
 
 import numpy as np
 
+import somas
 import test_functions
 import algorithms
 
@@ -80,8 +81,10 @@ def all_functions():
 
 def all_algorithms():
     return [
-        algorithms.PSO,
+        somas.SomaFurthest,
         algorithms.Soma,
+        somas.SomaDynamicPathLength,
+        algorithms.PSO,
         algorithms.BlindSearch,
         algorithms.ClimbingSearch,
         algorithms.Anneling

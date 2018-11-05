@@ -115,7 +115,6 @@ class Anneling(Algorithm):
             # reduce temperature
             T *= options['alpha']
 
-
 class Soma(Algorithm):
     def options(self):
         return {
@@ -161,7 +160,7 @@ class Soma(Algorithm):
             leader = self.find_leader(population, options['strategy'])
             yield SimulationStep(new_population, best=leader)
 
-    def find_leader(self, population, strategy):
+    def find_leader(self, population, strategy='AllToOne'):
         if strategy == 'AllToOne':
             return super(Soma, self).find_leader(population)
 
