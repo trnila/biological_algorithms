@@ -234,8 +234,9 @@ class DifferentialEvolution(Algorithm):
 
         for generation in range(options['generations']):
             new_population = []
-            for unit in population:
+            for nth, unit in enumerate(population):
                 seq = list(range(len(population)))
+                seq.remove(nth)
                 random.shuffle(seq)
 
                 a = population[seq[0]]
