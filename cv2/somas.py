@@ -63,7 +63,7 @@ class SomaFurthest(algorithms.Soma):
                 if np.random.uniform(0, 1) < 0.1:
                     diff = leader.arg - obj.arg
                 else:
-                    diff = self.find_farther(population, obj).arg - obj.arg
+                    diff = self.find_further(population, obj).arg - obj.arg
 
                 while t < options['path_length']:
                     x = np.random.uniform(0, 1, size=2) < options['prt']
@@ -84,7 +84,7 @@ class SomaFurthest(algorithms.Soma):
             leader = self.find_leader(population)
             yield SimulationStep(new_population, best=leader)
 
-    def find_farther(self, population, current):
+    def find_further(self, population, current):
         far = current
         max_dist = 0
 
