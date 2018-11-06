@@ -214,6 +214,9 @@ class PSO(Algorithm):
 
 
 class DifferentialEvolution(Algorithm):
+    STRATEGY_1 = 'DE/RAND/1/BIN'
+    STRATEGY_2 = 'DE/current-to-pbest/1/BIN'
+
     def options(self):
         return {
             'generations': algorithm_options.IntOption(default=100, min=2, max=100000),
@@ -221,6 +224,7 @@ class DifferentialEvolution(Algorithm):
 
             'F': algorithm_options.FloatOption(default=0.9),
             'cr': algorithm_options.FloatOption(default=0.9),
+            'strategy': algorithm_options.ChoiceOption([self.STRATEGY_1, self.STRATEGY_2]),
         }
 
     def run(self, space, fn, options):
@@ -229,8 +233,8 @@ class DifferentialEvolution(Algorithm):
             return unit
 
         population = [make_unit(space.gen_uniform_sample()) for _ in range(options['np'])]
-        gbest = self.find_leader(population)
-        yield SimulationStep(population, best=gbest)
+        pbest = self.find_leader(population)
+        yield SimulationStep(population, best=pbest)
 
         for generation in range(options['generations']):
             new_population = []
@@ -243,7 +247,13 @@ class DifferentialEvolution(Algorithm):
                 b = population[seq[1]]
                 c = population[seq[2]]
 
-                noisy = c.arg + options['F'] * (a.arg - b.arg)
+                if options['strategy'] == self.STRATEGY_1:
+                    noisy = c.arg + options['F'] * (a.arg - b.arg)
+                elif options['strategy'] == self.STRATEGY_2:
+                    noisy = unit.arg + options['F'] * (pbest.arg - unit.arg) + options['F'] * (a.arg - b.arg)
+                else:
+                    raise NotImplementedError("Unknown strategy: " + options['strategy'])
+
                 new = [0, 0]
                 for i in range(len(a.arg)):
                     if random.uniform(0, 1) < options['cr']:
@@ -258,7 +268,8 @@ class DifferentialEvolution(Algorithm):
                     new_population.append(unit)
 
             population = new_population
-            yield SimulationStep(population, best=gbest)
+            pbest = self.find_leader(population)
+            yield SimulationStep(population, best=pbest)
 
 
 class GridAlgorithm(Algorithm):
