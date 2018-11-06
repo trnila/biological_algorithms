@@ -213,6 +213,53 @@ class PSO(Algorithm):
             yield SimulationStep(population, best=gbest)
 
 
+class DifferentialEvolution(Algorithm):
+    def options(self):
+        return {
+            'generations': algorithm_options.IntOption(default=100, min=2, max=100000),
+            'np': algorithm_options.IntOption(default=10, min=2, max=100000), # population size
+
+            'F': algorithm_options.FloatOption(default=0.9),
+            'cr': algorithm_options.FloatOption(default=0.9),
+        }
+
+    def run(self, space, fn, options):
+        def make_unit(pos):
+            unit = Unit(arg=pos, cost=fn(pos))
+            return unit
+
+        population = [make_unit(space.gen_uniform_sample()) for _ in range(options['np'])]
+        gbest = self.find_leader(population)
+        yield SimulationStep(population, best=gbest)
+
+        for generation in range(options['generations']):
+            new_population = []
+            for unit in population:
+                seq = list(range(len(population)))
+                random.shuffle(seq)
+
+                a = population[seq[0]]
+                b = population[seq[1]]
+                c = population[seq[2]]
+
+                noisy = c.arg + options['F'] * (a.arg - b.arg)
+                new = [0, 0]
+                for i in range(len(a.arg)):
+                    if random.uniform(0, 1) < options['cr']:
+                        new[i] = noisy[i]
+                    else:
+                        new[i] = unit.arg[i]
+
+                candidate = space.make_unit(np.array(new), fn)
+                if candidate.cost <= unit.cost:
+                    new_population.append(candidate)
+                else:
+                    new_population.append(unit)
+
+            population = new_population
+            yield SimulationStep(population, best=gbest)
+
+
 class GridAlgorithm(Algorithm):
     def options(self):
         return [
