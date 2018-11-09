@@ -255,8 +255,10 @@ class DifferentialEvolution(Algorithm):
                     raise NotImplementedError("Unknown strategy: " + options['strategy'])
 
                 new = np.zeros(len(a.arg))
+                irand = random.randint(0, len(a.arg) - 1)
                 for i in range(len(a.arg)):
-                    if random.uniform(0, 1) < options['cr']:
+                    # ensure that at least one parameter is used from noisy
+                    if random.uniform(0, 1) < options['cr'] or i == irand:
                         new[i] = noisy[i]
                     else:
                         new[i] = unit.arg[i]
