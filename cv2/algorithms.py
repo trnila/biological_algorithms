@@ -225,6 +225,8 @@ class DifferentialEvolution(Algorithm):
             'F': algorithm_options.FloatOption(default=0.9),
             'cr': algorithm_options.FloatOption(default=0.9),
             'strategy': algorithm_options.ChoiceOption([self.STRATEGY_1, self.STRATEGY_2]),
+
+            'p': algorithm_options.FloatOption(default=1.0, min=0.0, max=1.0),
         }
 
     def run(self, space, fn, options):
@@ -233,8 +235,8 @@ class DifferentialEvolution(Algorithm):
             return unit
 
         population = [make_unit(space.gen_uniform_sample()) for _ in range(options['np'])]
-        pbest = self.find_leader(population)
-        yield SimulationStep(population, best=pbest)
+        gbest = self.find_leader(population)
+        yield SimulationStep(population, best=gbest)
 
         for generation in range(options['generations']):
             new_population = []
@@ -250,6 +252,9 @@ class DifferentialEvolution(Algorithm):
                 if options['strategy'] == self.STRATEGY_1:
                     noisy = c.arg + options['F'] * (a.arg - b.arg)
                 elif options['strategy'] == self.STRATEGY_2:
+                    # select all 100*p% percentile units and choose one of them
+                    pbests = self.find_p_bests(population, options['p'])
+                    pbest = random.choice(pbests)
                     noisy = unit.arg + options['F'] * (pbest.arg - unit.arg) + options['F'] * (a.arg - b.arg)
                 else:
                     raise NotImplementedError("Unknown strategy: " + options['strategy'])
@@ -270,8 +275,17 @@ class DifferentialEvolution(Algorithm):
                     new_population.append(unit)
 
             population = new_population
-            pbest = self.find_leader(population)
-            yield SimulationStep(population, best=pbest)
+            gbest = self.find_leader(population)
+            yield SimulationStep(population, best=gbest)
+
+    def find_p_bests(self, population, p):
+        costs = [unit.cost for unit in population]
+        threshold = np.percentile(costs, 100 * (1-p))
+        return [unit for unit in population if unit.cost <= threshold]
+
+
+
+
 
 
 class GridAlgorithm(Algorithm):
