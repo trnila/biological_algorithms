@@ -37,10 +37,10 @@ class Evaluator:
 
 
 class Genetic:
-    def __init__(self, cities):
+    def __init__(self, cities, popsize):
         self.evaluator = Evaluator(cities)
         self.cities = [(city.x, city.y) for city in cities]
-        self.popsize = 800
+        self.popsize = popsize
 
     def select(self, population):
         distances = [trajectory.distance for trajectory in population]

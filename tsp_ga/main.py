@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtCore import QTimer
@@ -36,6 +38,9 @@ cities = [
 
 
 class Test:
+    def __init__(self, _, __):
+        pass
+
     def run(self):
         import tsp
         c = [(x.x, x.y) for x in cities]
@@ -51,27 +56,46 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
 
         self.autoplay = False
+        self._zoom = 1
+        self.genetic = None
+        self.paths = []
 
         self.scene = QGraphicsScene()
         self.ui.graphicsView.setScene(self.scene)
 
-        self._zoom = 1
-
-        self.genetic = Genetic(cities).run()
-        #self.genetic = Test().run()
+        self.ui.algorithm.addItem('genetic', Genetic)
+        self.ui.algorithm.addItem('solver', Test)
 
         self.ui.playBtn.clicked.connect(self.on_play_click)
         self.ui.nextBtn.clicked.connect(self.next)
+        self.ui.restartBtn.clicked.connect(self.start)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.gen_next)
         self.timer.start(1)
 
-        self.paths = []
-
         for city in cities:
             self.scene.addEllipse(city.x, city.y, 5, 5, QPen(), QBrush(QColor(255, 0, 0)))
             self.scene.addSimpleText(city.name).setPos(city.x + 5, city.y + 5)
+
+        self.start()
+
+    def start(self):
+        try:
+            seed = int(self.ui.seed.text())
+        except ValueError as e:
+            seed = -1
+
+        if seed <= -1:
+            seed = random.randint(0, 1000)
+
+        random.seed(seed)
+        np.random.seed(seed)
+
+        self.clear_paths()
+        self.ui.distance.setText("")
+        clazz = self.ui.algorithm.currentData()
+        self.genetic = clazz(cities, int(self.ui.popSize.text())).run()
 
 
     def on_play_click(self, play):
@@ -90,9 +114,7 @@ class MainWindow(QMainWindow):
 
         self.ui.distance.setText(f"{trajectories[0].distance:.2f} units")
 
-        for path in self.paths:
-            self.scene.removeItem(path)
-        self.paths = []
+        self.clear_paths()
 
         pens = [
             QPen(QColor(255, 0, 0)),
@@ -100,6 +122,9 @@ class MainWindow(QMainWindow):
         ]
 
         for i, trajectory in enumerate(trajectories):
+            if i != 0 and not self.ui.showCur.isChecked():
+                break
+
             path = QPainterPath()
             path.moveTo(cities[trajectory.path[0]].x, cities[trajectory.path[0]].y)
             for hop in trajectory.path:
@@ -110,10 +135,11 @@ class MainWindow(QMainWindow):
                 self.scene.addPath(path, pen=pens[i])
             )
 
+    def clear_paths(self):
+        for path in self.paths:
+            self.scene.removeItem(path)
+        self.paths = []
 
-    @QtCore.pyqtSlot()
-    def on_pushButton_2_clicked(self):
-        self.scene.addEllipse(30, 20, 50, 50)
 
 app = QApplication([])
 
