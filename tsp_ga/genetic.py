@@ -49,7 +49,6 @@ class Genetic:
 
         costs = sorted([(1 - (trajectory.distance - m) / (M - m+0.0001), i, trajectory.distance) for i, trajectory in enumerate(population)], key=lambda x: x[0])
 
-
         r = np.random.uniform()
 
         for x in costs:
@@ -57,7 +56,6 @@ class Genetic:
                 return x[1]
 
         raise "Error"
-
 
 
     def run(self):
@@ -69,7 +67,9 @@ class Genetic:
 
         population = [make_trajectory() for i in range(self.popsize)]
 
-        while True:
+        glob_best = None
+        not_changed = 0
+        while not_changed < 1000:
             parent1 = population[self.select(population)].path
             parent2 = population[self.select(population)].path
 
@@ -78,7 +78,6 @@ class Genetic:
             new = Trajectory(new, self.evaluator.cost(new))
 
             population.append(new)
-
 
             best = population[0]
             worst = population[0]
@@ -91,8 +90,13 @@ class Genetic:
                     worst = trajectory
 
             population.remove(worst)
-
             yield (best, new)
+
+            if best != glob_best:
+                glob_best = best
+                not_changed = 0
+
+            not_changed += 1
 
     def mutate(self, cities):
         cities = cities.copy()
@@ -107,7 +111,6 @@ class Genetic:
         to_choose.remove(a)
         b = random.choice(to_choose)
         return a, b
-
 
     def merge(self, a, b):
         left = random.randint(0, len(self.cities) - 1)

@@ -89,6 +89,7 @@ class MainWindow(QMainWindow):
         if seed <= -1:
             seed = random.randint(0, 1000)
 
+        print(seed)
         random.seed(seed)
         np.random.seed(seed)
 
@@ -96,7 +97,6 @@ class MainWindow(QMainWindow):
         self.ui.distance.setText("")
         clazz = self.ui.algorithm.currentData()
         self.genetic = clazz(cities, int(self.ui.popSize.text())).run()
-
 
     def on_play_click(self, play):
         self.autoplay = play
@@ -110,6 +110,8 @@ class MainWindow(QMainWindow):
         try:
             trajectories = next(self.genetic)
         except StopIteration:
+            self.ui.playBtn.setChecked(False)
+            self.autoplay = False
             return
 
         self.ui.distance.setText(f"{trajectories[0].distance:.2f} units")
