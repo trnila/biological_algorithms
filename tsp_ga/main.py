@@ -130,6 +130,7 @@ class MainWindow(QMainWindow):
             for hop in trajectory.path:
                 city = cities[hop]
                 path.lineTo(city.x, city.y)
+            path.lineTo(cities[trajectory.path[0]].x, cities[trajectory.path[0]].y)
 
             self.paths.append(
                 self.scene.addPath(path, pen=pens[i])
