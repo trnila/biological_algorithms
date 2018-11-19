@@ -59,6 +59,7 @@ class MainWindow(QMainWindow):
         self._zoom = 1
         self.genetic = None
         self.paths = []
+        self.last = None
 
         self.scene = QGraphicsScene()
         self.ui.graphicsView.setScene(self.scene)
@@ -69,6 +70,7 @@ class MainWindow(QMainWindow):
         self.ui.playBtn.clicked.connect(self.on_play_click)
         self.ui.nextBtn.clicked.connect(self.next)
         self.ui.restartBtn.clicked.connect(self.start)
+        self.ui.showCur.stateChanged.connect(self.redraw)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.gen_next)
@@ -116,6 +118,13 @@ class MainWindow(QMainWindow):
 
         self.ui.distance.setText(f"{trajectories[0].distance:.2f} units")
 
+        self.last = trajectories
+        self.draw_trajectories(trajectories)
+
+    def redraw(self):
+        self.draw_trajectories(self.last)
+
+    def draw_trajectories(self, trajectories):
         self.clear_paths()
 
         pens = [
