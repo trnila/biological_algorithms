@@ -49,14 +49,20 @@ class Genetic:
 
         costs = sorted([(1 - (trajectory.distance - m) / (M - m+0.0001), i, trajectory.distance) for i, trajectory in enumerate(population)], key=lambda x: x[0])
 
+        first = None
         r = np.random.uniform()
-
         for x in costs:
             if x[0] >= r:
-                return x[1]
+                first = x[1]
+                costs.remove(x)
+                break
 
-        raise "Error"
+        r = np.random.uniform()
+        for x in costs:
+            if x[0] >= r:
+                return first, x[1]
 
+        return first, costs[-1][1]
 
     def run(self):
         def make_trajectory():
@@ -70,33 +76,26 @@ class Genetic:
         glob_best = None
         not_changed = 0
         while not_changed < 1000:
-            parent1 = population[self.select(population)].path
-            parent2 = population[self.select(population)].path
+            new_pop = [glob_best] if glob_best else []
 
-            new = self.merge(parent1, parent2)
-            self.mutate(new)
-            new = Trajectory(new, self.evaluator.cost(new))
+            for i in range(self.popsize - 1):
+                first, second = self.select(population)
+                parent1 = population[first].path
+                parent2 = population[second].path
 
-            population.append(new)
+                new = self.merge(parent1, parent2)
+                new = self.mutate(new)
+                new = Trajectory(new, self.evaluator.cost(new))
 
-            best = population[0]
-            worst = population[0]
+                new_pop.append(new)
 
-            for trajectory in population:
-                if trajectory.distance < best.distance:
-                    best = trajectory
+                for trajectory in population:
+                    if glob_best is None or trajectory.distance < glob_best.distance:
+                        glob_best = trajectory
 
-                if trajectory.distance > worst.distance:
-                    worst = trajectory
+                yield (glob_best, new)
 
-            population.remove(worst)
-            yield (best, new)
-
-            if best != glob_best:
-                glob_best = best
-                not_changed = 0
-
-            not_changed += 1
+            population = new_pop
 
     def mutate(self, cities):
         cities = cities.copy()
