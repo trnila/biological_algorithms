@@ -5,8 +5,12 @@ from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene
 import random
 import ui_main_window
+from antcolony import AntColony
 from cities import cities
 from genetic import Trajectory, Genetic
+
+
+np.set_printoptions(threshold=np.nan, linewidth=10000)
 
 
 class Test:
@@ -38,6 +42,8 @@ class MainWindow(QMainWindow):
         self.scene = QGraphicsScene()
         self.ui.graphicsView.setScene(self.scene)
 
+        self.ui.popSize.setValue(20)
+        self.ui.algorithm.addItem('ant', AntColony)
         self.ui.algorithm.addItem('genetic', Genetic)
         self.ui.algorithm.addItem('solver', Test)
 
