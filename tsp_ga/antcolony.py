@@ -15,16 +15,18 @@ class AntColony:
         beta = 1
         ro = 0.5
         Q = 100
+        initial_feromones = 0.2
+        max_generations = 100
 
-        ants = list(range(N))
         all_cities = set(range(N))
         best = None
 
-        feromones = np.full((N, N), 0.2)
+        feromones = np.full((N, N), initial_feromones)
 
-        for generation in range(100):
+        for generation in range(max_generations):
             paths = []
-            for cur_city in ants:
+            # each ant starts in different city
+            for cur_city in all_cities:
                 trajectory = [cur_city]
 
                 while True:
@@ -38,21 +40,26 @@ class AntColony:
                         yield best, new
                         break
 
-                    bottom = sum([feromones[cur_city, j]**alfa * 1/self.evaluator.distances[cur_city, j]**beta for j in remaining_cities])
-                    r = np.random.uniform()
+                    def cost(candidate):
+                        return feromones[cur_city, candidate]**alfa * 1/self.evaluator.distances[cur_city, candidate]**beta
+
+                    bottom = sum(map(cost, remaining_cities))
                     cumulated = 0
+                    r = np.random.uniform()
                     for j in remaining_cities:
-                        cumulated += (feromones[cur_city, j]**alfa * (1/self.evaluator.distances[cur_city, j])**beta) / bottom
+                        cumulated += cost(j) / bottom
 
                         if cumulated >= r:
                             cur_city = j
                             trajectory.append(j)
                             break
 
+            # decay all feromones
             feromones *= ro
 
-            for new in paths:
-                p = new.path + [new.path[0]]
+            # strengthen feromones on used paths
+            for path in paths:
+                p = path.path + [path.path[0]]
                 for a, b in zip(p, p[1:]):
-                    feromones[a][b] += Q / new.distance
-                    feromones[b][a] += Q / new.distance
+                    feromones[a][b] += Q / path.distance
+                    feromones[b][a] += Q / path.distance
