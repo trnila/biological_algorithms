@@ -1,8 +1,9 @@
 import numpy as np
 from PyQt5 import QtCore
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene
+from PyQt5.QtCore import QTimer, QSize
+from PyQt5.QtGui import QPainterPath, QBrush, QColor, QPen, QPixmap
+from PyQt5.QtOpenGL import QGLWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsPixmapItem
 import random
 import ui_main_window
 from antcolony import AntColony
@@ -78,7 +79,7 @@ class MainWindow(QMainWindow):
         self.clear_paths()
         self.ui.distance.setText("")
         clazz = self.ui.algorithm.currentData()
-        self.genetic = clazz(self.cities, int(self.ui.popSize.text())).run()
+        self.genetic = clazz(self.cities, int(self.ui.popSize.text())).run({})
 
     def on_play_click(self, play):
         self.autoplay = play

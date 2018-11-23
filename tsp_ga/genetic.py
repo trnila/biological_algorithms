@@ -64,7 +64,7 @@ class Genetic:
 
         return first, costs[-1][1]
 
-    def run(self):
+    def run(self, opts):
         def make_trajectory():
             trajectory = list(range(len(self.cities)))
             random.shuffle(trajectory)
