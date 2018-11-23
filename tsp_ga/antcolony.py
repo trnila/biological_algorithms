@@ -1,5 +1,3 @@
-import random
-
 from genetic import Evaluator, Trajectory
 import numpy as np
 
@@ -22,40 +20,34 @@ class AntColony:
         all_cities = set(range(N))
         best = None
 
-        feromones = np.ndarray((N, N))
-        for i in range(N):
-            for j in range(N):
-                feromones[i, j] = 0.2
+        feromones = np.full((N, N), 0.2)
 
         for generation in range(100):
             paths = []
-            for start in ants:
-                trajectory = [start]
-                print(feromones)
+            for cur_city in ants:
+                trajectory = [cur_city]
 
                 while True:
-                    to_check = all_cities - set(trajectory)
-                    if not to_check:
+                    remaining_cities = all_cities - set(trajectory)
+                    if not remaining_cities:
                         new = Trajectory(trajectory, distance=self.evaluator.cost(trajectory))
                         if not best or best.distance > new.distance:
                             best = new
-                            feromones = feromones
 
                         paths.append(new)
                         yield best, new
                         break
 
-                    bottom = sum([feromones[start, j]**alfa * 1/self.evaluator.distances[start, j]**beta for j in to_check])
+                    bottom = sum([feromones[cur_city, j]**alfa * 1/self.evaluator.distances[cur_city, j]**beta for j in remaining_cities])
                     r = np.random.uniform()
                     cumulated = 0
-                    for j in to_check:
-                        cumulated += (feromones[start, j]**alfa * (1/self.evaluator.distances[start, j])**beta) / bottom
+                    for j in remaining_cities:
+                        cumulated += (feromones[cur_city, j]**alfa * (1/self.evaluator.distances[cur_city, j])**beta) / bottom
 
                         if cumulated >= r:
+                            cur_city = j
+                            trajectory.append(j)
                             break
-
-                    start = j
-                    trajectory.append(start)
 
             feromones *= ro
 
