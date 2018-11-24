@@ -2,7 +2,8 @@ from unittest import TestCase
 
 
 from collections import namedtuple
-from genetic import Evaluator
+from common import Evaluator
+
 City = namedtuple('City', ['x', 'y', 'name', 'id'])
 
 

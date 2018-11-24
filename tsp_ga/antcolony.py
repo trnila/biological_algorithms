@@ -1,4 +1,4 @@
-from genetic import Evaluator, Trajectory
+from common import Trajectory, Evaluator
 import numpy as np
 
 

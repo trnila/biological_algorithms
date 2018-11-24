@@ -8,8 +8,8 @@ import random
 import ui_main_window
 from antcolony import AntColony
 from cities import cities
-from genetic import Trajectory, Genetic
-
+from genetic import Genetic
+from common import Trajectory
 
 np.set_printoptions(threshold=np.nan, linewidth=10000)
 
@@ -72,6 +72,7 @@ class MainWindow(QMainWindow):
         if seed <= -1:
             seed = random.randint(0, 1000)
 
+        seed = 100
         print(seed)
         random.seed(seed)
         np.random.seed(seed)
