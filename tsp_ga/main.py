@@ -50,7 +50,7 @@ class MainWindow(QMainWindow):
 
         self.ui.playBtn.clicked.connect(self.on_play_click)
         self.ui.nextBtn.clicked.connect(self.next)
-        self.ui.restartBtn.clicked.connect(self.start)
+        self.ui.restartBtn.clicked.connect(self.restart)
         self.ui.showCur.stateChanged.connect(self.redraw)
 
         self.timer = QTimer()
@@ -63,16 +63,20 @@ class MainWindow(QMainWindow):
 
         self.start()
 
+    def restart(self):
+        self.start()
+        self.autoplay = True
+
     def start(self):
         try:
             seed = int(self.ui.seed.text())
         except ValueError as e:
             seed = -1
 
-        if seed <= -1:
+        if seed <= 0:
             seed = random.randint(0, 1000)
 
-        seed = 100
+        #seed = 100
         print(seed)
         random.seed(seed)
         np.random.seed(seed)

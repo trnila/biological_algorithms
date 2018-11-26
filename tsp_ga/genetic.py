@@ -45,10 +45,10 @@ class Genetic:
 
         glob_best = None
         not_changed = 0
-        while not_changed < 1000:
-            new_pop = [glob_best] if glob_best else []
+        while not_changed < 5000:
+            intermediate = population.copy()
 
-            for i in range(self.popsize - 1):
+            for i in range(self.popsize):
                 first, second = self.select(population)
                 parent1 = population[first].path
                 parent2 = population[second].path
@@ -57,15 +57,20 @@ class Genetic:
                 new = self.mutate(new)
                 new = Trajectory(new, self.evaluator.cost(new))
 
-                new_pop.append(new)
+                intermediate.append(new)
 
-                for trajectory in population:
-                    if glob_best is None or trajectory.distance < glob_best.distance:
-                        glob_best = trajectory
+            changed = False
+            for trajectory in population:
+                if glob_best is None or trajectory.distance < glob_best.distance:
+                    glob_best = trajectory
+                    changed = True
+
+            if not changed:
+                not_changed += 1
 
                 yield (glob_best, new)
 
-            population = new_pop
+            population = sorted(intermediate, key=lambda x: x.distance)[0:self.popsize]
 
     def mutate(self, cities):
         cities = cities.copy()
