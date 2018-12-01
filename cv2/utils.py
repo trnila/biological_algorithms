@@ -81,6 +81,7 @@ def all_functions():
 
 def all_algorithms():
     return [
+        algorithms.EvolutionalStrategy,
         algorithms.DifferentialEvolution,
         somas.SomaFurthest,
         algorithms.Soma,

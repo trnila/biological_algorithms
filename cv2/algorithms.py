@@ -284,8 +284,94 @@ class DifferentialEvolution(Algorithm):
         return [unit for unit in population if unit.cost <= threshold]
 
 
+class EvolutionalStrategy(Algorithm):
+    def options(self):
+        return {
+            'np': algorithm_options.IntOption(default=20, min=2, max=100000),  # population size
+            'cd': algorithm_options.FloatOption(default=0.5, min=0.0, max=1),  # population size
+            'strategy': algorithm_options.ChoiceOption(['compare_pairs', 'take_child', 'union']),
+        }
 
+    def run(self, space, fn, options):
+        def make_unit(pos):
+            unit = Unit(arg=pos, cost=fn(pos))
+            return unit
 
+        strategy = getattr(self, f'strategy_{options["strategy"]}')
+        population = [make_unit(space.gen_uniform_sample()) for _ in range(options['np'])]
+        dev = 1
+
+        for i in range(100):
+            new_population = []
+            for parent in population:
+                new_pos = space.cap(parent.arg + np.random.normal(dev, size=len(parent.arg)))
+
+                child = Unit(arg=new_pos, cost=fn(new_pos))
+                new_population.append(child)
+
+            population, success = strategy(population, new_population)
+
+            if success < len(population) / 5:
+                dev *= options['cd']
+            elif success > len(population) / 5:
+                dev /= options['cd']
+
+            print(dev)
+            yield SimulationStep(population, best=population[0])
+
+    def strategy_compare_pairs(self, parents, childs):
+        """
+        take better from each parent or child
+        """
+        new_population = []
+        success = 0
+
+        for parent, child in zip(parents, childs):
+            if child.cost <= parent.cost:
+                new_population.append(child)
+                success += 1
+            else:
+                new_population.append(parent)
+
+        return new_population, success
+
+    def strategy_take_child(self, parents, childs):
+        """
+        always take child, even if it is not optimal
+        """
+        new_population = []
+        success = 0
+
+        for parent, child in zip(parents, childs):
+            new_population.append(child)
+
+            if child.cost <= parent.cost:
+                success += 1
+
+        return new_population, success
+
+    def strategy_union(self, parents, childs):
+        """
+        take best from booth populations
+        """
+        parents = sorted(parents, key=lambda u: u.cost)
+        childs = sorted(childs, key=lambda u: u.cost)
+        p = 0
+        c = 0
+
+        new_population = []
+        success = 0
+
+        for _ in range(len(parents)):
+            if parents[p].cost < childs[p].cost:
+                new_population.append(parents[p])
+                p += 1
+            else:
+                new_population.append(childs[c])
+                c += 1
+                success += 1
+
+        return new_population, success
 
 
 class GridAlgorithm(Algorithm):
