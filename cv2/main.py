@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import renderer
 import ui_main_window
 import utils
-from ipython import ConsoleWidget
 from simulation import Simulation
 from utils import Space, MeasureContext
 from widgets import OptionWidget
@@ -45,13 +44,6 @@ class MainWindow(QMainWindow):
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self.autoplay_next)
 
-        self.console = ConsoleWidget()
-        self.console.execute("%matplotlib inline")
-        self.console.push_vars({
-            'np': np,
-            'plt': plt,
-        })
-        self.ui.tab_3.layout().addWidget(self.console)
 
         self.setup_renderers()
         self.refresh()
@@ -137,12 +129,6 @@ class MainWindow(QMainWindow):
         ))
 
         np_points = np.array(points)
-        self.console.push_vars({
-            'points': np_points,
-            #            'values': np_points.reshape(2000, 3)[:, 2],
-            'fn': self.simulation.fn,
-        })
-
         self.ui.stepLabel.setText(f"{self.simulation.step}/{self.simulation.max_steps}")
 
     def fill_z(self, groups, fn):
