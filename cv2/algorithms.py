@@ -288,6 +288,7 @@ class EvolutionalStrategy(Algorithm):
     def options(self):
         return {
             'np': algorithm_options.IntOption(default=20, min=2, max=100000),  # population size
+            'generations': algorithm_options.IntOption(default=100, min=2, max=100000),  # population size
             'cd': algorithm_options.FloatOption(default=0.5, min=0.0, max=1),  # population size
             'strategy': algorithm_options.ChoiceOption(['compare_pairs', 'take_child', 'union']),
         }
@@ -301,7 +302,7 @@ class EvolutionalStrategy(Algorithm):
         population = [make_unit(space.gen_uniform_sample()) for _ in range(options['np'])]
         dev = 1
 
-        for i in range(100):
+        for i in range(options['generations']):
             new_population = []
             for parent in population:
                 new_pos = space.cap(parent.arg + np.random.normal(dev, size=len(parent.arg)))
@@ -316,7 +317,6 @@ class EvolutionalStrategy(Algorithm):
             elif success > len(population) / 5:
                 dev /= options['cd']
 
-            print(dev)
             yield SimulationStep(population, best=population[0])
 
     def strategy_compare_pairs(self, parents, childs):
@@ -363,7 +363,7 @@ class EvolutionalStrategy(Algorithm):
         success = 0
 
         for _ in range(len(parents)):
-            if parents[p].cost < childs[p].cost:
+            if parents[p].cost < childs[c].cost:
                 new_population.append(parents[p])
                 p += 1
             else:
