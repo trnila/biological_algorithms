@@ -65,29 +65,46 @@ def assign(I):
         for i in range(1, len(I) - 1):
             distances[i] += fn(I[i + 1]) - fn(I[i - 1])
 
-    return [x for _, x in sorted(zip(distances, I))]
+    return sorted(zip(distances, I))
 
+def select(pop):
+    vals = [val for val, _ in pop]
+    m = min(vals)
+    M = max(vals)
+
+    def fit(val):
+        return (val - m) / (M - m + 0.000001)
+
+    fitness = [(fit(cost), x) for cost, x in pop]
+
+    r = random.uniform(0, 1)
+    cumsum = 0
+    for prop, x in fitness:
+        cumsum += prop
+        if cumsum > r:
+            return pop[0][1], x
+
+    return pop[0][1], pop[1][1]
 
 def crossover(a, b):
-    r = np.random.randint(1, len(a) - 1)
-    return a[0:r] + b[r+1:-1]
+    return (a + b) / 2
 
 
 def mutate(a):
-    return a
+    return a + np.random.normal()
 
 
 def evolution(pop):
-    evoluted = pop.copy()
+    evoluted = []
 
-    for i in range(len(evoluted)):
-        evoluted[i] += np.random.normal()
-
+    for i in range(len(pop)):
+        a, b = select(pop)
+        evoluted.append(mutate(crossover(a, b)))
 
     return evoluted
 
 start, end = -60, 60
-NP = 80
+NP = 20
 
 f1 = lambda x: -x**2
 f2 = lambda x: -(x-2)**2
@@ -105,33 +122,30 @@ for generation in range(1, 20):
     new_pop = []
     i = 0
     while len(new_pop) + len(fronts[i]) < NP:
-        for ff in assign(fronts[i]):
-            new_pop.append(P[ff])
+        for cost, idx in assign(fronts[i]):
+            new_pop.append((cost, P[idx]))
         i += 1
 
-    for ff in assign(fronts[i])[0:NP - len(new_pop)]:
-        new_pop.append(P[ff])
+    for cost, idx in assign(fronts[i])[0:NP - len(new_pop)]:
+        new_pop.append((cost, P[idx]))
 
-    print("new_pop", new_pop)
-    print(fronts[i])
-    print(len(new_pop))
-
-    P = np.array(list(new_pop) + evolution(new_pop))
+    P = np.array(list([x for _, x in new_pop]) + evolution(new_pop))
     print("P", P)
 
+    plt.clf()
     plt.subplot(2, 1, 1)
     plt.plot(x, f1(x))
     plt.plot(x, f2(x))
-    graph(P)
+    for p in fronts:
+        graph([P[i] for i in p])
 
     plt.subplot(2, 1, 2)
     plt.xlim([-1, 3])
     plt.ylim([-4, 1])
     plt.plot(x, f1(x))
     plt.plot(x, f2(x))
-    graph(P)
-
-    graph(P)
+    for p in fronts:
+        graph([P[i] for i in p])
 
     plt.show()
     time.sleep(1)
